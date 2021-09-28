@@ -1,0 +1,10 @@
+{
+    "MODULE_TYPE" : 4,
+    "MODULE_DIR" : [-1, 1, 1, -1, -1, 1, -1],
+    "JOINT_OFFSET" : [-4546, 7714, -4372, 3203, 2210, 6410, 5012],
+    "TOOL_OFFSET" : [0.0, 0.0, 0.0],
+    "CAMERA_JOINT" : [63.10, -16.72, -15.40, -35.39, -61.80, 0, 0],
+    "READY_JOINT" : [45, -5, -60, -65, 45, 0, 0],
+    "LOGGING_ENABLE" : false,
+    "CURRENT_STATE_PRINT" : true
+}
