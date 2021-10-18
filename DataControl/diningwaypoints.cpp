@@ -38,6 +38,11 @@ DiningWaypoints::DiningWaypoints(){
     side2_offset[0] = -0.019;   side2_offset[1] = 0.018;
     side2_offset[2] =  0.019;   side2_offset[3] = 0.018;
 
+    side3_offset[0] = -0.019;   side3_offset[1] =  0.018;
+    side3_offset[2] =  0.019;   side3_offset[3] =  0.018;
+    side3_offset[4] = -0.019;   side3_offset[5] = -0.014;
+    side3_offset[6] =  0.019;   side3_offset[7] = -0.014;
+
     side5_offset_x[0] = 0;
     side5_offset_x[1] = 0.036*1;
     side5_offset_x[2] = 0.036*2;

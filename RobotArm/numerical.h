@@ -27,22 +27,23 @@ public:
     Numerical();
     ~Numerical();
     // LU solver
-public:
     void ludcmp(double *a, int n, int* indx, double d, double *fac);
     void lubksb(double *a, int n, int* indx, double *b, double *x);
 
+    void inv_mat66(double *M, double *inv_M);
+
+
     // Singular Value Decomposition
-public:
     double pythag(double a, double b);
     void svdcmp(double *a, int m, int n, double *U, double *w, double *v);
 
     // Integrator - Adams Bashforth 3rd order formulation
-public:
     void absh3Initialize(double h, uint array_size);
     double absh3(double *Y, double *Yp, double t_current);
     void getY_next(double *Y);
     bool absh3_flag;
 private:
+    double det;
     double step_size, t_next;
     uint n, intcount;
     double *Y_next, *AW, *AW1;

@@ -14,7 +14,15 @@ myconfig.path = /mnt/mtd5/daincube/KETI
 myconfig.files = $$PWD/config.json
 INSTALLS += myconfig
 
-TARGET = DARController
+joints.path = /mnt/mtd5/daincube/KETI/cal_data
+joints.files = $$PWD/cal_data/joint_data.txt
+INSTALLS += joints
+
+carts.path = /mnt/mtd5/daincube/KETI/cal_data
+carts.files = $$PWD/cal_data/cartesian_data.txt
+INSTALLS += carts
+
+TARGET = DARControllerKITECH
 
 SOURCES += main.cpp \
     ControlMain/controlfunc.cpp \

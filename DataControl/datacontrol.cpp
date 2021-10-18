@@ -35,6 +35,7 @@ DataControl::DataControl()
     key_value = 0;
     feeding_start = false;
     joint_path_index = 0;
+    joint_wp_index = 0;
     logging_enable = false;
     current_state_print = false;
     dining_delay = 6000;
@@ -43,7 +44,7 @@ DataControl::DataControl()
     dining_speed_default = 5.0;
     KITECHData.dining_speed = 1;
     KITECHData.dining_time = 6;
-    select_speed = 3.0;
+    select_speed = 2.0;
 
     PathData.teaching_pose[0] = -0.217032;
     PathData.teaching_pose[1] = -0.035785;
@@ -111,6 +112,26 @@ DataControl::DataControl()
     assert(current_state_print_json.IsBool());
     current_state_print = current_state_print_json.GetBool();
     printf("current state print : %s\n", current_state_print ? "true" : "false");
+
+//    load_data("/mnt/mtd5/daincube/KETI/cal_data/joint_data.txt", &joint_wp, "\t");
+//    printf("joint_wp size : %d\n", joint_wp.size());
+//    for(unsigned int i = 0; i < joint_wp.size()/6; i++){
+//        for(int j = 0; j < 6; j++){
+//            printf("%f\t", joint_wp[i*6 + j]);
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
+
+//    load_data("/mnt/mtd5/daincube/KETI/cal_data/cartesian_data.txt", &cartesian_wp, "\t");
+//    printf("cartesian_wp size : %d\n", cartesian_wp.size());
+//    for(unsigned int i = 0; i < cartesian_wp.size()/3; i++){
+//        for(int j = 0; j < 3; j++){
+//            printf("%f\t", cartesian_wp[i*3 + j]);
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
 }
 
 DataControl::~DataControl()

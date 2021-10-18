@@ -5,6 +5,6 @@
     "TOOL_OFFSET" : [0.0, 0.0, 0.0],
     "CAMERA_JOINT" : [55.590820, -12.062988, -18.830566, -34.716796, -56.733398, 0.0, 0.0],
     "READY_JOINT" : [45, -5, -60, -65, 45, 0, 0],
-    "LOGGING_ENABLE" : false,
+    "LOGGING_ENABLE" : true,
     "CURRENT_STATE_PRINT" : false
 }

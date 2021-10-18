@@ -7,6 +7,7 @@ ControlMain::ControlMain()
     tcpServer = new TcpServer(dataControl);
     tcpServerLatte = new TcpServer(dataControl);
     tcpServerDIO = new TcpServer(dataControl);
+    tcpServerTemp = new TcpServer(dataControl);
 
     dataControl->RobotData.module_init = false;
 
@@ -107,6 +108,10 @@ void ControlMain::start(){
     tcpServerDIO->start();
     usleep(1000);
 
+    tcpServerTemp->setting(5051);
+    tcpServerTemp->start();
+    usleep(1000);
+
     init_thread_run = true;
     pthread_create(&init_thread, NULL, init_func, this);
 
@@ -197,13 +202,11 @@ void *ControlMain::key_input_func(void *arg){
     unsigned int led_cnt = 0;
 
     while(pControlMain->key_input_thread_run){
-//        pControlMain->dataControl->key_value = getch();
-//        printf("key value : %d\n", pControlMain->dataControl->key_value);
 
         led_cnt++;
         usleep(1000);
 
-        if(pControlMain->tcpServerDIO->dio_comm_run && pControlMain->tcpServerLatte->recv_latte_comm_run && pControlMain->tcpServerLatte->send_latte_comm_run  && !pControlMain->dataControl->config_check){
+        if(pControlMain->tcpServerDIO->dio_comm_run && pControlMain->tcpServerLatte->recv_latte_comm_run && pControlMain->tcpServerLatte->send_latte_comm_run && !pControlMain->dataControl->config_check){
             pControlMain->dataControl->tablet_mode = true;
             pControlMain->dataControl->config_check = true;
 
@@ -232,7 +235,234 @@ void *ControlMain::key_input_func(void *arg){
             }
         }
 
-        if(pControlMain->dataControl->key_value == KEY_Z){
+        if(pControlMain->dataControl->key_value == KEY_A){
+            for(int i = 0; i < 6; i++){
+                pControlMain->dataControl->ClientToServer.desiredJoint[i] = pControlMain->dataControl->joint_wp[pControlMain->dataControl->joint_wp_index*6 + i];
+            }
+            pControlMain->dataControl->ClientToServer.desiredJoint[6] = pControlMain->dataControl->ClientToServer.desiredJoint[5];
+
+            printf("%d, %f, %f, %f, %f, %f, %f, %f\n", pControlMain->dataControl->joint_wp_index+1,
+                   pControlMain->dataControl->ClientToServer.desiredJoint[0], pControlMain->dataControl->ClientToServer.desiredJoint[1],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[2], pControlMain->dataControl->ClientToServer.desiredJoint[3],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[4], pControlMain->dataControl->ClientToServer.desiredJoint[5], pControlMain->dataControl->ClientToServer.desiredJoint[6]);
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::JointMove;
+            pControlMain->dataControl->ClientToServer.subMode = DataControl::JointMotion;
+            pControlMain->dataControl->joint_path_index = 0;
+
+            pControlMain->dataControl->joint_wp_index++;
+            if(pControlMain->dataControl->joint_wp_index >= (pControlMain->dataControl->joint_wp.size())/6){
+                pControlMain->dataControl->joint_wp_index = 0;
+            }
+        }
+        else if(pControlMain->dataControl->key_value == KEY_S){
+            pControlMain->dataControl->ClientToServer.desiredJoint[0] = 48.89832;
+            pControlMain->dataControl->ClientToServer.desiredJoint[1] = 23.80314;
+            pControlMain->dataControl->ClientToServer.desiredJoint[2] = -108.412;
+            pControlMain->dataControl->ClientToServer.desiredJoint[3] = -84.6091;
+            pControlMain->dataControl->ClientToServer.desiredJoint[4] = 41.45755;
+            pControlMain->dataControl->ClientToServer.desiredJoint[5] = 15.61556;
+            pControlMain->dataControl->ClientToServer.desiredJoint[6] = pControlMain->dataControl->ClientToServer.desiredJoint[5];
+
+            printf("%f, %f, %f, %f, %f, %f, %f\n",
+                   pControlMain->dataControl->ClientToServer.desiredJoint[0], pControlMain->dataControl->ClientToServer.desiredJoint[1],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[2], pControlMain->dataControl->ClientToServer.desiredJoint[3],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[4], pControlMain->dataControl->ClientToServer.desiredJoint[5], pControlMain->dataControl->ClientToServer.desiredJoint[6]);
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::JointMove;
+            pControlMain->dataControl->ClientToServer.subMode = DataControl::JointMotion;
+            pControlMain->dataControl->joint_path_index = 0;
+
+            while(!(pControlMain->dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            pControlMain->dataControl->PathData.total_time.clear();
+            pControlMain->dataControl->PathData.point_px.clear();
+            pControlMain->dataControl->PathData.point_py.clear();
+            pControlMain->dataControl->PathData.point_pz.clear();
+            pControlMain->dataControl->PathData.point_rx.clear();
+            pControlMain->dataControl->PathData.point_ry.clear();
+            pControlMain->dataControl->PathData.point_rz.clear();
+            pControlMain->dataControl->PathData.acc_time.clear();
+
+            pControlMain->dataControl->PathData.row = 6;
+            pControlMain->dataControl->PathData.movePath.clear();
+            pControlMain->dataControl->PathData.movePath.resize(pControlMain->dataControl->PathData.row);
+
+            double time = 0;
+            for(uint i = 0; i < pControlMain->dataControl->PathData.row; i++){
+                pControlMain->dataControl->PathData.movePath[i].path_x.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_y.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_z.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_theta.clear();
+                pControlMain->dataControl->PathData.total_time.push_back(time);
+                pControlMain->dataControl->PathData.acc_time.push_back(0.5);
+                time += pControlMain->dataControl->select_speed;
+            }
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->RobotData.present_end_pose[0]);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->RobotData.present_end_pose[1]);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->RobotData.present_end_pose[2]);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            for(int i = 0; i < pControlMain->dataControl->PathData.row - 1; i++){
+                pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->cartesian_wp[i*3+0]*0.001);
+                pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->cartesian_wp[i*3+1]*0.001);
+                pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->cartesian_wp[i*3+2]*0.001);
+                pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+                pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+                pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+            }
+
+            pControlMain->robotPathGenerate(pControlMain->dataControl->PathData.point_px, pControlMain->dataControl->PathData.point_py, pControlMain->dataControl->PathData.point_pz,
+                                            pControlMain->dataControl->PathData.point_rx, pControlMain->dataControl->PathData.point_ry, pControlMain->dataControl->PathData.point_rz);
+
+            pControlMain->dataControl->PathData.path_data_indx = 0;
+            pControlMain->dataControl->PathData.path_struct_indx = 0;
+            pControlMain->dataControl->PathData.cycle_count_max = -1;
+            pControlMain->delay_cnt = 0;
+            pControlMain->delay_cnt_max = 5000;
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::RunMode;
+            pControlMain->dataControl->RobotData.run_mode = DataControl::CalMode;
+        }
+        else if(pControlMain->dataControl->key_value == KEY_D){
+            pControlMain->dataControl->ClientToServer.desiredJoint[0] = 48.89832;
+            pControlMain->dataControl->ClientToServer.desiredJoint[1] = 23.80314;
+            pControlMain->dataControl->ClientToServer.desiredJoint[2] = -108.412;
+            pControlMain->dataControl->ClientToServer.desiredJoint[3] = -84.6091;
+            pControlMain->dataControl->ClientToServer.desiredJoint[4] = 41.45755;
+            pControlMain->dataControl->ClientToServer.desiredJoint[5] = 15.61556;
+            pControlMain->dataControl->ClientToServer.desiredJoint[6] = pControlMain->dataControl->ClientToServer.desiredJoint[5];
+
+            printf("%f, %f, %f, %f, %f, %f, %f\n",
+                   pControlMain->dataControl->ClientToServer.desiredJoint[0], pControlMain->dataControl->ClientToServer.desiredJoint[1],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[2], pControlMain->dataControl->ClientToServer.desiredJoint[3],
+                    pControlMain->dataControl->ClientToServer.desiredJoint[4], pControlMain->dataControl->ClientToServer.desiredJoint[5], pControlMain->dataControl->ClientToServer.desiredJoint[6]);
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::JointMove;
+            pControlMain->dataControl->ClientToServer.subMode = DataControl::JointMotion;
+            pControlMain->dataControl->joint_path_index = 0;
+
+            while(!(pControlMain->dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            pControlMain->dataControl->PathData.total_time.clear();
+            pControlMain->dataControl->PathData.point_px.clear();
+            pControlMain->dataControl->PathData.point_py.clear();
+            pControlMain->dataControl->PathData.point_pz.clear();
+            pControlMain->dataControl->PathData.point_rx.clear();
+            pControlMain->dataControl->PathData.point_ry.clear();
+            pControlMain->dataControl->PathData.point_rz.clear();
+            pControlMain->dataControl->PathData.acc_time.clear();
+
+            pControlMain->dataControl->PathData.row = 2;
+            pControlMain->dataControl->PathData.movePath.clear();
+            pControlMain->dataControl->PathData.movePath.resize(pControlMain->dataControl->PathData.row);
+
+            double time = 0;
+            for(uint i = 0; i < pControlMain->dataControl->PathData.row; i++){
+                pControlMain->dataControl->PathData.movePath[i].path_x.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_y.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_z.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_theta.clear();
+                pControlMain->dataControl->PathData.total_time.push_back(time);
+                pControlMain->dataControl->PathData.acc_time.push_back(0.5);
+                time += pControlMain->dataControl->select_speed;
+            }
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->RobotData.present_end_pose[0]);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->RobotData.present_end_pose[1]);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->RobotData.present_end_pose[2]);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->cartesian_wp[3*3+0]*0.001);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->cartesian_wp[3*3+1]*0.001);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->cartesian_wp[3*3+2]*0.001);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            pControlMain->robotPathGenerate(pControlMain->dataControl->PathData.point_px, pControlMain->dataControl->PathData.point_py, pControlMain->dataControl->PathData.point_pz,
+                                            pControlMain->dataControl->PathData.point_rx, pControlMain->dataControl->PathData.point_ry, pControlMain->dataControl->PathData.point_rz);
+
+            pControlMain->dataControl->PathData.path_data_indx = 0;
+            pControlMain->dataControl->PathData.path_struct_indx = 0;
+            pControlMain->dataControl->PathData.cycle_count_max = 0;
+            pControlMain->delay_cnt = 0;
+            pControlMain->delay_cnt_max = 5000;
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::RunMode;
+            pControlMain->dataControl->RobotData.run_mode = DataControl::CalMode;
+
+            while(!(pControlMain->dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            pControlMain->dataControl->PathData.total_time.clear();
+            pControlMain->dataControl->PathData.point_px.clear();
+            pControlMain->dataControl->PathData.point_py.clear();
+            pControlMain->dataControl->PathData.point_pz.clear();
+            pControlMain->dataControl->PathData.point_rx.clear();
+            pControlMain->dataControl->PathData.point_ry.clear();
+            pControlMain->dataControl->PathData.point_rz.clear();
+            pControlMain->dataControl->PathData.acc_time.clear();
+
+            pControlMain->dataControl->PathData.row = 3;
+            pControlMain->dataControl->PathData.movePath.clear();
+            pControlMain->dataControl->PathData.movePath.resize(pControlMain->dataControl->PathData.row);
+
+            time = 0;
+            for(uint i = 0; i < pControlMain->dataControl->PathData.row; i++){
+                pControlMain->dataControl->PathData.movePath[i].path_x.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_y.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_z.clear();
+                pControlMain->dataControl->PathData.movePath[i].path_theta.clear();
+                pControlMain->dataControl->PathData.total_time.push_back(time);
+                pControlMain->dataControl->PathData.acc_time.push_back(0.5);
+                time += pControlMain->dataControl->select_speed;
+            }
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->cartesian_wp[3*3+0]*0.001);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->cartesian_wp[3*3+1]*0.001);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->cartesian_wp[3*3+2]*0.001);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->cartesian_wp[1*3+0]*0.001);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->cartesian_wp[1*3+1]*0.001);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->cartesian_wp[1*3+2]*0.001);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            pControlMain->dataControl->PathData.point_px.push_back(pControlMain->dataControl->cartesian_wp[3*3+0]*0.001);
+            pControlMain->dataControl->PathData.point_py.push_back(pControlMain->dataControl->cartesian_wp[3*3+1]*0.001);
+            pControlMain->dataControl->PathData.point_pz.push_back(pControlMain->dataControl->cartesian_wp[3*3+2]*0.001);
+            pControlMain->dataControl->PathData.point_rx.push_back(calOrientation[0]);
+            pControlMain->dataControl->PathData.point_ry.push_back(calOrientation[1]);
+            pControlMain->dataControl->PathData.point_rz.push_back(calOrientation[2]);
+
+            pControlMain->robotPathGenerate(pControlMain->dataControl->PathData.point_px, pControlMain->dataControl->PathData.point_py, pControlMain->dataControl->PathData.point_pz,
+                                            pControlMain->dataControl->PathData.point_rx, pControlMain->dataControl->PathData.point_ry, pControlMain->dataControl->PathData.point_rz);
+
+            pControlMain->dataControl->PathData.path_data_indx = 0;
+            pControlMain->dataControl->PathData.path_struct_indx = 0;
+            pControlMain->dataControl->PathData.cycle_count_max = -1;
+            pControlMain->delay_cnt = 0;
+            pControlMain->delay_cnt_max = 5000;
+
+            pControlMain->dataControl->ClientToServer.opMode = DataControl::RunMode;
+            pControlMain->dataControl->RobotData.run_mode = DataControl::CalMode;
+        }
+        else if(pControlMain->dataControl->key_value == KEY_Z){
             printf("Pressed key Z\n");
 
             pControlMain->ecatInterface->set_led(3);
@@ -347,6 +577,9 @@ void *ControlMain::key_input_func(void *arg){
             }
             pControlMain->dataControl->key_value = KEY_ESC;
         }
+
+//        pControlMain->dataControl->key_value = getch();
+//        printf("key value : %d\n", pControlMain->dataControl->key_value);
     }
     printf("Finished Key Input Thread\n");
 

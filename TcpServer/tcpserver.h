@@ -63,6 +63,7 @@ public:
     void setCommPeriod(unsigned int _time);
     int clientSockFD;
     bool recv_comm_run, send_comm_run, comm_manager_run, dio_comm_run, recv_latte_comm_run, send_latte_comm_run;
+    bool temp_comm_run;
 
 private:
     long sendByteLen;
@@ -86,6 +87,7 @@ private:
     pthread_t dio_comm_thread;
     pthread_t recv_comm_thread, send_comm_thread;
     pthread_t recv_latte_comm_thread, send_latte_comm_thread;
+    pthread_t temp_comm_thread;
 
     static void* comm_manager_func(void *arg);
     static void* recv_comm_func(void *arg);
@@ -93,6 +95,7 @@ private:
     static void* dio_comm_func(void *arg);
     static void* recv_latte_comm_func(void *arg);
     static void* send_latte_comm_func(void *arg);
+    static void* temp_comm_func(void *arg);
 };
 
 #endif // TCPSERVER_H

@@ -57,6 +57,7 @@ public:
     TcpServer *tcpServer;
     TcpServer *tcpServerLatte;
     TcpServer *tcpServerDIO;
+    TcpServer *tcpServerTemp;
 
     static void* init_func(void* arg);
     bool init_thread_run;

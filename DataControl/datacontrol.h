@@ -66,6 +66,7 @@ const double initJoint3Deg = -175;
 //const double operateFeedingReadyPose[6] = {-0.222, 0.058758770483143,  0.0989879236551952, -1.57080736369899,  1.48352986419518, 1.5708665530537};
 const double feedingOrientation[3] = {1.5707963267949, 0, -1.5707963267949}; // 90 0 -90
 //const double feedingSection1TopPosition[3] = {-0.299594, 0.184727, -0.039 + 0.17};
+const double calOrientation[3] = {1.57079632584418, -0.272542874123738, -1.56458522472617};
 
 //const double feedingJointSection1[4*7] = {
 //    47.8862483422535, -19.7900424579100, -45.6345585848571, -65.4246010427670, 42.1137501225120, 0, 0,
@@ -136,6 +137,8 @@ const double feedingOrientation[3] = {1.5707963267949, 0, -1.5707963267949}; // 
 //    -0.289094, 0.037055, -0.039 + 0.148 + 0.03, -90, 25,
 //    -0.289094, 0.037055, -0.039 + 0.148 + 0.1, -90, 25
 //};
+
+
 
 class DataControl
 {
@@ -249,7 +252,7 @@ public:
     enum Motion{JogMotion = 0, JointMotion, CartesianJogMotion, CartesianMotion};
     enum Module{FAR_V1=1, FAR_V2, FAR_V3, FAR_V4};
     enum Comm{RS485=1, RS232, EtherCAT};
-    enum CmdType{PathCmd=1, ReadyCmd, RunCmd, StopCmd, FileReady, FileRun, CustomRun};
+    enum CmdType{PathCmd=1, ReadyCmd, RunCmd, StopCmd, FileReady, FileRun, CustomRun, CalMode};
     enum Operate{Start=1, Stop, StartTeaching, StopTeaching, StartFeeding, StopFeeding, Feeding, FeedingSwitch, ReadyFeeding};
     enum Section{Side1=1, Side2, Side3, Soup, Rice, Mouse, Home, Test};
 
@@ -317,13 +320,13 @@ public:
     waypoints readyJoints;
     std::vector<double> joint0, joint1, joint2, joint3, joint4, joint5, joint6;
     std::vector<double> joint_path[NUM_JOINT];
-    unsigned int joint_path_index, joint_path_size;
+    unsigned int joint_path_index, joint_path_size, joint_wp_index;
     std::vector<double> beta_path, d7_path;
     double cur_beta, des_beta, cur_d7, des_d7;
     double des_q6, des_q7;
     std::vector<double> q6_path, q7_path;
-
     double offset[3];
+    std::vector<double> joint_wp, cartesian_wp;
 };
 
 
@@ -346,6 +349,7 @@ public:
     double get_z_offset(int arg){return z_offset[arg];}
     double get_side1_offset(unsigned int arg1, unsigned int arg2){return side1_offset[arg1*2 + arg2];}
     double get_side2_offset(unsigned int arg1, unsigned int arg2){return side2_offset[arg1*2 + arg2];}
+    double get_side3_offset(unsigned int arg1, unsigned int arg2){return side3_offset[arg1*2 + arg2];}
     //    double get_side5_x_offset(unsigned int arg1){return side5_offset_x[arg1%4];}
     //    double get_side5_y_offset(unsigned int arg1){return side5_offset_y[arg1/4];}
     double get_side5_x_offset(unsigned int arg1){return side5_offset_x[arg1%4];}

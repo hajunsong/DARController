@@ -12,7 +12,7 @@ static double xx = 0, yy = 0, zz = 0, xy = 0, xz = 0, yz = 0;
 static double s = 0, c = 0, t = 0, magnitude = 0;
 static double goal_reach = 0, epsilon_pos = 0, epsilon_ang = 0;
 static double pos_d[3] = {0,}, ori_d[3] = {0,};
-static double errmax = 0, errtol = 0, alpha = 0, err[6] = {0,}, qdot[6] = {0,};
+//static double errmax = 0, errtol = 0, alpha = 0, err[6] = {0,}, qdot[6] = {0,};
 static double temp3[9] = {0,};
 static double *fac_mat, *qddot;
 static int *indx_array;
@@ -1389,7 +1389,7 @@ void RobotArm::run_kinematics(double *q, double *pose){
     for(int i = 0; i < 6; i++){
         body[i+1].qi = q[i];
     }
-    body[6].qi = q[5];
+//    body[6].qi = q[5];
 //        printf("present q : %f, %f, %f, %f, %f, %f\n",
 //                  body[1].qi, body[2].qi, body[3].qi, body[4].qi, body[5].qi, body[6].qi);
 
@@ -1466,7 +1466,7 @@ int RobotArm::run_inverse_kinematics(double* input_q, double* des_pose, double* 
     goal_reach = false;
 
     epsilon_pos = 0.05;
-    epsilon_ang = 1;
+    epsilon_ang = 0.5;
 
     for (uint i = 1; i <= num_body; i++) {
         body[i].qi = input_q[i - 1];
@@ -1652,11 +1652,13 @@ void RobotArm::kinematics()
 }
 
 int RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
+    double errmax = 0, errtol = 0, alpha = 0, err[6] = {0,}, qdot[6] = {0,};
+
     errmax = 0;
-    errtol = 1e-3;
+    errtol = 1e-4;
 
     alpha = 1/4.0;
-    for(int i = 0; i < 1/alpha; i++){
+    for(int i = 0; i < 4; i++){
         for(int j = 0; j < 3; j++){
             err[j] = des_pos[j] - body[num_body].re[j];
             err[j + 3] = des_ang[j] - body[num_body].ori_zyx[j];
@@ -1666,6 +1668,9 @@ int RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 
         numeric->ludcmp(J, 6, indx, 0.0, fac);
         numeric->lubksb(fac, 6, indx, err, qdot);
+
+//        numeric->inv_mat66(J, fac);
+//        mat(fac, err, 6, 6, 6, qdot);
 
         for (uint j = 0; j < 6; j++){
             delta_q[j] = qdot[j]*alpha;
@@ -1677,11 +1682,19 @@ int RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 
         kinematics();
 
-        errmax = err[0];
-        for(uint i = 1; i < num_body;i++){
-            errmax = errmax > abs(err[i]) ? errmax : abs(err[i]);
+        for(int j = 0; j < 3; j++){
+            err[j] = des_pos[j] - body[num_body].re[j];
+            err[j + 3] = des_ang[j] - body[num_body].ori_zyx[j];
         }
 
+        errmax = abs(err[0]);
+        for(uint j = 1; j < num_body; j++){
+            errmax = errmax > abs(err[j]) ? errmax : abs(err[j]);
+        }
+
+        if(errmax < errtol){
+            break;
+        }
     }
 //    printf("[IK]Err Max : %E\n", errmax);
 

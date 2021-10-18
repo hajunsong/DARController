@@ -50,7 +50,7 @@ void ControlMain::robot_RT(void *arg){
             case DataControl::ObiMode:
                 break;
             case DataControl::TestMode:
-//                pThis->robotTest();
+                //                pThis->robotTest();
                 break;
             default : break;
         }
@@ -75,7 +75,7 @@ void ControlMain::robot_RT(void *arg){
 
         if(pThis->dataControl->current_state_print){
             rt_printf("present q(enc) : %d, %d, %d, %d, %d, %d, %d\n",
-                    (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[0].v_global_cur_position),
+                      (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[0].v_global_cur_position),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[1].v_global_cur_position),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[2].v_global_cur_position),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[3].v_global_cur_position),
@@ -83,7 +83,7 @@ void ControlMain::robot_RT(void *arg){
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[5].v_global_cur_position),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[6].v_global_cur_position));
             rt_printf("present q(deg) : %f, %f, %f, %f, %f, %f, %f\n",
-                    (pThis->dataControl->RobotData.cur_position[0]) * ENC2DEG,
+                      (pThis->dataControl->RobotData.cur_position[0]) * ENC2DEG,
                     (pThis->dataControl->RobotData.cur_position[1]) * ENC2DEG,
                     (pThis->dataControl->RobotData.cur_position[2]) * ENC2DEG,
                     (pThis->dataControl->RobotData.cur_position[3]) * ENC2DEG,
@@ -91,7 +91,7 @@ void ControlMain::robot_RT(void *arg){
                     (pThis->dataControl->RobotData.cur_position[5]) * ENC2DEG,
                     (pThis->dataControl->RobotData.cur_position[6]) * ENC2DEG);
             rt_printf("status word : %d, %d, %d, %d, %d, %d, %d\n",
-                    (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[0].v_global_cur_status_word),
+                      (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[0].v_global_cur_status_word),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[1].v_global_cur_status_word),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[2].v_global_cur_status_word),
                     (pThis->ecatInterface->v_global_ethercat_control.f_get_slave()[3].v_global_cur_status_word),
@@ -172,7 +172,7 @@ void ControlMain::robotWait()
 
 
     if(dataControl->operateMode.mode == DataControl::Start){
-//        dataControl->KITECHData.camera_request = true;
+        dataControl->KITECHData.camera_request = true;
     }
 }
 
@@ -198,7 +198,7 @@ void ControlMain::robotJointMove(char mode, double desJoint[])
             if(dataControl->joint_path_index == 0){
                 for(int i = 0; i < NUM_JOINT; i++){
                     dataControl->joint_path[i].clear();
-                    path_generator(dataControl->RobotData.cur_position[i]*ENC2DEG, desJoint[i], dataControl->select_speed, 1.0, step_size, &dataControl->joint_path[i]);
+                    path_generator(dataControl->RobotData.cur_position[i]*ENC2DEG, desJoint[i], dataControl->select_speed, 0.5, step_size, &dataControl->joint_path[i]);
                 }
             }
 
@@ -207,7 +207,7 @@ void ControlMain::robotJointMove(char mode, double desJoint[])
             }
             ecatInterface->servo_run(dataControl->RobotData.tar_position, dataControl->module_dir, dataControl->joint_offset);
 
-//            rt_printf("joint path index : %d\n", dataControl->joint_path_index++);
+            //            rt_printf("joint path index : %d\n", dataControl->joint_path_index++);
             dataControl->joint_path_index++;
             if(dataControl->joint_path_index >= dataControl->joint_path[0].size()){
                 ecatInterface->set_led(0);
@@ -226,17 +226,18 @@ void ControlMain::robotJointMove(char mode, double desJoint[])
 void ControlMain::robotCartesianMove(char mode, double desCartesian[NUM_DOF])
 {
     dataControl->cartesianPoseScaleDown(desCartesian, dataControl->RobotData.desired_end_pose);
-    //    switch(mode){
-    //        case DataControl::CartesianJogMotion:
-    //            for(unsigned char i = 0; i < NUM_DOF; i++){
-    //                dataControl->RobotData.desired_end_pose[i] += dataControl->RobotData.present_end_pose[i];
-    //            }
-    //            break;
-    //        case DataControl::CartesianMotion:
-    //            break;
-    //        default:
-    //            break;
-    //    }
+
+//    switch(mode){
+//        case DataControl::CartesianJogMotion:
+//            for(unsigned char i = 0; i < NUM_DOF; i++){
+//                dataControl->RobotData.desired_end_pose[i] += dataControl->RobotData.present_end_pose[i];
+//            }
+//            break;
+//        case DataControl::CartesianMotion:
+//            break;
+//        default:
+//            break;
+//    }
 
     if(dataControl->ClientToServer.move_time > 0 && dataControl->ClientToServer.acc_time > 0
             && dataControl->ClientToServer.move_time >= dataControl->ClientToServer.acc_time){
@@ -294,8 +295,7 @@ void ControlMain::robotCartesianMove(char mode, double desCartesian[NUM_DOF])
         //        memcpy(dataControl->PathData.movePath[0].R_init, robotArm->body[robotArm->num_body].Ae, sizeof(double)*9);
 
         dataControl->ClientToServer.opMode = DataControl::RunMode;
-
-        dataControl->RobotData.run_mode = DataControl::RunCmd;
+        dataControl->RobotData.run_mode = DataControl::CalMode;
         dataControl->PathData.path_data_indx = 0;
         dataControl->PathData.path_struct_indx = 0;
         dataControl->PathData.cycle_count_max = 1;
@@ -308,7 +308,7 @@ void ControlMain::robotKinematics(){
     for(int i = 0; i < 6; i++){
         dataControl->RobotData.present_q[i] = dataControl->RobotData.cur_position[i]*ENC2DEG*DEG2RAD;
     }
-    dataControl->RobotData.present_q[5] = 0;
+    //    dataControl->RobotData.present_q[5] = 0;
 
     //    func_q6q7_to_d7(dataControl->RobotData.cur_position[6]*ENC2DEG*DEG2RAD, dataControl->RobotData.cur_position[5]*ENC2DEG*DEG2RAD, &dataControl->RobotData.d7);
     //    robotArm->set_tool_offset(0.148 + abs(dataControl->RobotData.d7)*0.001, dataControl->RobotData.d7 >= 0 ? -0.003 : 0.007, 0);
@@ -406,165 +406,156 @@ void ControlMain::robotRun()
         }
         case DataControl::RunCmd:
         {
-            if(dataControl->operateMode.section != DataControl::Side3){
-                dataControl->RobotData.desired_end_pose[0] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_x[dataControl->PathData.path_data_indx];
-                dataControl->RobotData.desired_end_pose[1] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_y[dataControl->PathData.path_data_indx];
-                dataControl->RobotData.desired_end_pose[2] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_z[dataControl->PathData.path_data_indx];
-                dataControl->RobotData.desired_end_pose[3] = dataControl->PathData.point_rx[0];
-                dataControl->RobotData.desired_end_pose[4] = dataControl->PathData.point_ry[0];
-                dataControl->RobotData.desired_end_pose[5] = dataControl->PathData.point_rz[0];
-                dataControl->RobotData.desired_beta = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_beta[dataControl->PathData.path_data_indx];
-                dataControl->RobotData.desired_d7 = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_d7[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[0] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_x[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[1] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_y[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[2] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_z[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[3] = feedingOrientation[0];
+            dataControl->RobotData.desired_end_pose[4] = feedingOrientation[1];
+            dataControl->RobotData.desired_end_pose[5] = feedingOrientation[2];
+            dataControl->RobotData.desired_beta = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_beta[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_d7 = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_d7[dataControl->PathData.path_data_indx];
 
-//                rt_printf("index : %d, des_beta : %f, des_d7 : %f\n", dataControl->PathData.path_data_indx, dataControl->RobotData.desired_beta, dataControl->RobotData.desired_d7);
+            //                rt_printf("index : %d, des_beta : %f, des_d7 : %f\n", dataControl->PathData.path_data_indx, dataControl->RobotData.desired_beta, dataControl->RobotData.desired_d7);
 
-                for(int i = 0; i < 6; i++){
-                    dataControl->RobotData.present_q[i] = dataControl->RobotData.cur_position[i]*ENC2DEG*DEG2RAD;
-                    dataControl->RobotData.present_q[5] = 0;
-                }
-                robotArm->run_inverse_kinematics(dataControl->RobotData.present_q, dataControl->RobotData.desired_end_pose,
-                                                 dataControl->RobotData.desired_q, dataControl->RobotData.present_end_pose);
+            for(int i = 0; i < 6; i++){
+                dataControl->RobotData.present_q[i] = dataControl->RobotData.cur_position[i]*ENC2DEG*DEG2RAD;
+                dataControl->RobotData.present_q[5] = 0;
+            }
+            robotArm->run_inverse_kinematics(dataControl->RobotData.present_q, dataControl->RobotData.desired_end_pose,
+                                             dataControl->RobotData.desired_q, dataControl->RobotData.present_end_pose);
 
-                if (delay_cnt == 0){
-                    dataControl->RobotData.desired_q6 = dataControl->RobotData.desired_beta*(-32.0/25.0);
-                    func_q6d7_to_q7(dataControl->RobotData.desired_q6, dataControl->RobotData.desired_d7, &dataControl->RobotData.desired_q7);
+            if (delay_cnt == 0){
+                dataControl->RobotData.desired_q6 = dataControl->RobotData.desired_beta*(-32.0/25.0);
+                func_q6d7_to_q7(dataControl->RobotData.desired_q6, dataControl->RobotData.desired_d7, &dataControl->RobotData.desired_q7);
 
-                    dataControl->RobotData.tar_position[0] = dataControl->RobotData.desired_q[0]*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[1] = dataControl->RobotData.desired_q[1]*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[2] = dataControl->RobotData.desired_q[2]*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[3] = dataControl->RobotData.desired_q[3]*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[4] = dataControl->RobotData.desired_q[4]*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[5] = dataControl->RobotData.desired_q7*RAD2DEG*DEG2ENC;
-                    dataControl->RobotData.tar_position[6] = dataControl->RobotData.desired_q6*DEG2ENC;
+                dataControl->RobotData.tar_position[0] = dataControl->RobotData.desired_q[0]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[1] = dataControl->RobotData.desired_q[1]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[2] = dataControl->RobotData.desired_q[2]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[3] = dataControl->RobotData.desired_q[3]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[4] = dataControl->RobotData.desired_q[4]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[5] = dataControl->RobotData.desired_q7*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[6] = dataControl->RobotData.desired_q6*DEG2ENC;
 
-                    ecatInterface->servo_run(dataControl->RobotData.tar_position, dataControl->module_dir, dataControl->joint_offset);
-                    dataControl->PathData.path_data_indx += 1;
-                }
-                ecatInterface->set_led(2);
+                ecatInterface->servo_run(dataControl->RobotData.tar_position, dataControl->module_dir, dataControl->joint_offset);
+                dataControl->PathData.path_data_indx += 1;
+            }
+            ecatInterface->set_led(2);
 
-                if (dataControl->PathData.path_data_indx >= dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].data_size - 1){
-//                    rt_printf("delay cnt : %d\n", delay_cnt);
-//                    delay_cnt++;
-//                    if(delay_cnt >= delay_cnt_max){
+            if (dataControl->PathData.path_data_indx >= dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].data_size - 1){
+                //                    rt_printf("delay cnt : %d\n", delay_cnt);
+                //                    delay_cnt++;
+                //                    if(delay_cnt >= delay_cnt_max){
+                dataControl->PathData.path_data_indx = 0;
+                dataControl->PathData.path_struct_indx++;
+                //                        delay_cnt = 0;
+                //                    }
+                //                    else{
+                //                        ecatInterface->set_led(3);
+                //                        return;
+                //                    }
+
+                if (dataControl->PathData.path_struct_indx >= dataControl->PathData.row - 1){
+                    if(dataControl->PathData.cycle_count_max == -1)
+                    {
                         dataControl->PathData.path_data_indx = 0;
-                        dataControl->PathData.path_struct_indx++;
-//                        delay_cnt = 0;
-//                    }
-//                    else{
-//                        ecatInterface->set_led(3);
-//                        return;
-//                    }
-
-                    if (dataControl->PathData.path_struct_indx >= dataControl->PathData.row - 1){
-                        if(dataControl->PathData.cycle_count_max == -1)
-                        {
-                            dataControl->PathData.path_data_indx = 0;
-                            dataControl->PathData.path_struct_indx = 0;
-                        }
-                        else
-                        {
-                            if(dataControl->feeding){
-                                switch(dataControl->operateMode.section){
-                                    case DataControl::Side1:
-                                    case DataControl::Side2:
-                                    case DataControl::Side3:
-                                    case DataControl::Soup:
-                                    case DataControl::Rice:
-                                        dataControl->operateMode.section = DataControl::Mouse;
-                                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                        break;
-                                    case DataControl::Mouse:
-                                        dataControl->operateMode.section = DataControl::Home;
-                                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                        break;
-                                    case DataControl::Home:
-                                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                        dataControl->operateMode.mode = DataControl::Start;
-    //                                    dataControl->ClientToServer.opMode = DataControl::Wait;
-                                        dataControl->feeding = false;
-                                        break;
-                                    default:
-                                        break;
-                                }
+                        dataControl->PathData.path_struct_indx = 0;
+                    }
+                    else
+                    {
+                        if(dataControl->feeding){
+                            switch(dataControl->operateMode.section){
+                                case DataControl::Side1:
+                                case DataControl::Side2:
+                                case DataControl::Side3:
+                                case DataControl::Soup:
+                                case DataControl::Rice:
+                                    dataControl->operateMode.section = DataControl::Mouse;
+                                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                                    break;
+                                case DataControl::Mouse:
+                                    dataControl->operateMode.section = DataControl::Home;
+                                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                                    break;
+                                case DataControl::Home:
+                                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                                    dataControl->operateMode.mode = DataControl::Start;
+                                    //                                    dataControl->ClientToServer.opMode = DataControl::Wait;
+                                    dataControl->feeding = false;
+                                    break;
+                                default:
+                                    break;
                             }
-                            else{
-                                dataControl->ClientToServer.opMode = DataControl::Wait;
-                            }
-
-                            dataControl->PathData.path_data_indx = 0;
-                            dataControl->PathData.path_struct_indx = 0;
-
-                            rt_printf("robot motion exit\n");
-                            ecatInterface->set_led(1);
                         }
+                        else{
+                            dataControl->ClientToServer.opMode = DataControl::Wait;
+                        }
+
+                        dataControl->PathData.path_data_indx = 0;
+                        dataControl->PathData.path_struct_indx = 0;
+
+                        rt_printf("robot motion exit\n");
+                        ecatInterface->set_led(1);
                     }
                 }
             }
-            else{
-//                if(dataControl->joint_path_index == 0){
-//                    for(int i = 0; i < NUM_JOINT; i++){
-//                        dataControl->joint_path[i].clear();
-//                        path_generator(dataControl->RobotData.cur_position[i]*ENC2DEG, desJoint[i], dataControl->dining_speed_default*dataControl->dining_speed, 1.0, step_size, &dataControl->joint_path[i]);
-//                    }
-//                }
+            break;
+        }
+        case DataControl::CalMode:
+        {
+            dataControl->RobotData.desired_end_pose[0] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_x[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[1] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_y[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[2] = dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].path_z[dataControl->PathData.path_data_indx];
+            dataControl->RobotData.desired_end_pose[3] = dataControl->PathData.point_rx[0];
+            dataControl->RobotData.desired_end_pose[4] = dataControl->PathData.point_ry[0];
+            dataControl->RobotData.desired_end_pose[5] = dataControl->PathData.point_rz[0];
 
-                if(dataControl->dining_speed == 0.7){
-                    for(int i = 0; i < NUM_JOINT; i++){
-                        dataControl->RobotData.tar_position[i] = diningWaypoints.diningSection[2].joint_path_h[i][dataControl->joint_path_index]*RAD2DEG*DEG2ENC;
-                    }
-                    dataControl->joint_path_size = diningWaypoints.diningSection[2].joint_path_h[0].size();
-                }
-                else if(dataControl->dining_speed == 1.3){
-                    for(int i = 0; i < NUM_JOINT; i++){
-                        dataControl->RobotData.tar_position[i] = diningWaypoints.diningSection[2].joint_path_h[i][dataControl->joint_path_index]*RAD2DEG*DEG2ENC;
-                    }
-                    dataControl->joint_path_size = diningWaypoints.diningSection[2].joint_path_l[0].size();
-                }
-                else{
-                    for(int i = 0; i < NUM_JOINT; i++){
-                        dataControl->RobotData.tar_position[i] = diningWaypoints.diningSection[2].joint_path_d[i][dataControl->joint_path_index]*RAD2DEG*DEG2ENC;
-                    }
-                    dataControl->joint_path_size = diningWaypoints.diningSection[2].joint_path_d[0].size();
-                }
+            for(int i = 0; i < 6; i++){
+                dataControl->RobotData.present_q[i] = dataControl->RobotData.cur_position[i]*ENC2DEG*DEG2RAD;
+            }
+            robotArm->run_inverse_kinematics(dataControl->RobotData.present_q, dataControl->RobotData.desired_end_pose,
+                                             dataControl->RobotData.desired_q, dataControl->RobotData.present_end_pose);
+
+            if(delay_cnt == 0){
+                dataControl->RobotData.tar_position[0] = dataControl->RobotData.desired_q[0]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[1] = dataControl->RobotData.desired_q[1]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[2] = dataControl->RobotData.desired_q[2]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[3] = dataControl->RobotData.desired_q[3]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[4] = dataControl->RobotData.desired_q[4]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[5] = dataControl->RobotData.desired_q[5]*RAD2DEG*DEG2ENC;
+                dataControl->RobotData.tar_position[6] = dataControl->RobotData.tar_position[5];
 
                 ecatInterface->servo_run(dataControl->RobotData.tar_position, dataControl->module_dir, dataControl->joint_offset);
+                dataControl->PathData.path_data_indx += 1;
+            }
 
-                rt_printf("joint path index : %d\n", dataControl->joint_path_index++);
-                dataControl->joint_path_index++;
-                if(dataControl->joint_path_index >= dataControl->joint_path_size){
-                    if(dataControl->feeding){
-                        switch(dataControl->operateMode.section){
-                            case DataControl::Side1:
-                            case DataControl::Side2:
-                            case DataControl::Side3:
-                            case DataControl::Soup:
-                            case DataControl::Rice:
-                                dataControl->operateMode.section = DataControl::Mouse;
-                                dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                break;
-                            case DataControl::Mouse:
-                                dataControl->operateMode.section = DataControl::Home;
-                                dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                break;
-                            case DataControl::Home:
-                                dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                                dataControl->operateMode.mode = DataControl::Start;
-//                                    dataControl->ClientToServer.opMode = DataControl::Wait;
-                                dataControl->feeding = false;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    else{
-                        dataControl->ClientToServer.opMode = DataControl::Wait;
-                    }
+            ecatInterface->set_led(2);
 
+            if (dataControl->PathData.path_data_indx >= dataControl->PathData.movePath[dataControl->PathData.path_struct_indx].data_size - 1){
+                //                rt_printf("delay cnt : %d\n", delay_cnt);
+                delay_cnt++;
+
+                if(delay_cnt >= delay_cnt_max){
                     dataControl->PathData.path_data_indx = 0;
-                    dataControl->PathData.path_struct_indx = 0;
+                    dataControl->PathData.path_struct_indx++;
+                    delay_cnt = 0;
+                }
 
-                    rt_printf("robot motion exit\n");
-                    ecatInterface->set_led(1);
+                if (dataControl->PathData.path_struct_indx >= dataControl->PathData.row - 1){
+                    if(dataControl->PathData.cycle_count_max == -1)
+                    {
+                        dataControl->PathData.path_data_indx = 0;
+                        dataControl->PathData.path_struct_indx = 0;
+                    }
+                    else
+                    {
+                        dataControl->ClientToServer.opMode = DataControl::Wait;
+
+                        dataControl->PathData.path_data_indx = 0;
+                        dataControl->PathData.path_struct_indx = 0;
+
+                        rt_printf("robot motion exit\n");
+                        ecatInterface->set_led(1);
+                    }
                 }
             }
 
@@ -618,9 +609,9 @@ void ControlMain::robotOperate(){
             dataControl->PathData.point_px.push_back(dataControl->RobotData.present_end_pose[0]);
             dataControl->PathData.point_py.push_back(dataControl->RobotData.present_end_pose[1]);
             dataControl->PathData.point_pz.push_back(dataControl->RobotData.present_end_pose[2]);
-            dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-            dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-            dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+            dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+            dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+            dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
             dataControl->PathData.acc_time.push_back(1);
 
             dataControl->ClientToServer.opMode = DataControl::Wait;
@@ -710,9 +701,9 @@ void ControlMain::robotOperate(){
             dataControl->PathData.point_px.push_back(dataControl->RobotData.present_end_pose[0]);
             dataControl->PathData.point_py.push_back(dataControl->RobotData.present_end_pose[1]);
             dataControl->PathData.point_pz.push_back(dataControl->RobotData.present_end_pose[2]);
-            dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-            dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-            dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+            dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+            dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+            dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
 
             dataControl->cur_beta = dataControl->RobotData.cur_position[6]*ENC2DEG*(-32.0/25.0);
             func_q6q7_to_d7(dataControl->RobotData.cur_position[6]*ENC2DEG, dataControl->RobotData.cur_position[5]*ENC2DEG, &dataControl->cur_d7);
@@ -727,9 +718,9 @@ void ControlMain::robotOperate(){
                     dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[0].x[0]);
                     dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[0].y[0]);
                     dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[0].z[0]);
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                     dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[0].beta[0]);
                     dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[0].d7[0]);
                     dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[0].option[0]);
@@ -741,9 +732,9 @@ void ControlMain::robotOperate(){
                     dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[0]);
                     dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[0]);
                     dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[1].z[0]);
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                     dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[1].beta[0]);
                     dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[1].d7[0]);
                     dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[1].option[0]);
@@ -752,15 +743,15 @@ void ControlMain::robotOperate(){
                 }
                 case DataControl::Side3:
                 {
-//                    dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[0]);
-//                    dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[0]);
-//                    dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[2].z[0]);
-//                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-//                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-//                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
-//                    dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[2].beta[0]);
-//                    dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[2].d7[0]);
-//                    dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[2].option[0]);
+                    dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[0]);
+                    dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[0]);
+                    dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[2].z[0]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
+                    dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[2].beta[0]);
+                    dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[2].d7[0]);
+                    dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[2].option[0]);
 
                     break;
                 }
@@ -769,9 +760,9 @@ void ControlMain::robotOperate(){
                     dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[3].x[0]);
                     dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[3].y[0]);
                     dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[3].z[0]);
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                     dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[3].beta[0]);
                     dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[3].d7[0]);
                     dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[3].option[0]);
@@ -783,9 +774,9 @@ void ControlMain::robotOperate(){
                     dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[4].x[0]);
                     dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[4].y[0]);
                     dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[4].z[0]);
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                     dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[4].beta[0]);
                     dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[4].d7[0]);
                     dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[4].option[0]);
@@ -804,6 +795,7 @@ void ControlMain::robotOperate(){
             }
 
             robotPathGenerate(dataControl->PathData.point_px, dataControl->PathData.point_py, dataControl->PathData.point_pz, dataControl->PathData.point_beta, dataControl->PathData.point_d7, dataControl->PathData.point_option, diningWaypoints.get_z_offset(0) + 0.1);
+//            robotPathGenerate(dataControl->PathData.point_px, dataControl->PathData.point_py, dataControl->PathData.point_pz, dataControl->PathData.point_rx, dataControl->PathData.point_ry, dataControl->PathData.point_rz);
 
             dataControl->ClientToServer.opMode = DataControl::RunMode;
             dataControl->RobotData.run_mode = DataControl::RunCmd;
@@ -841,7 +833,7 @@ void ControlMain::robotOperate(){
                     dataControl->PathData.row = diningWaypoints.diningSection[1].x.size() + 2;
                     break;
                 case DataControl::Side3:
-//                    dataControl->PathData.row = diningWaypoints.diningSection[2].x.size() + 2;
+                    dataControl->PathData.row = diningWaypoints.diningSection[2].x.size() + 2;
                     break;
                 case DataControl::Soup:
                     dataControl->PathData.row = diningWaypoints.diningSection[3].x.size() + 2;
@@ -894,9 +886,9 @@ void ControlMain::robotOperate(){
             dataControl->PathData.point_px.push_back(dataControl->RobotData.present_end_pose[0]);
             dataControl->PathData.point_py.push_back(dataControl->RobotData.present_end_pose[1]);
             dataControl->PathData.point_pz.push_back(dataControl->RobotData.present_end_pose[2]);
-            dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-            dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-            dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+            dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+            dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+            dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
 
             if(dataControl->operateMode.section <= DataControl::Rice){
 
@@ -917,14 +909,14 @@ void ControlMain::robotOperate(){
                 case DataControl::Side1:
                 {
                     for(unsigned int i = 0; i < dataControl->PathData.row - 2; i++){
-//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[0].x[i] + dataControl->KITECHData.food_pos[0]*0.001);
-//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[0].y[i] - dataControl->KITECHData.food_pos[1]*0.001);
-                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[0].x[i] + diningWaypoints.get_side1_offset(dataControl->trayInfor.section1, 0));
-                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[0].y[i] + diningWaypoints.get_side1_offset(dataControl->trayInfor.section1, 1));
+                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[0].x[i] + dataControl->KITECHData.food_pos[0]*0.001);
+                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[0].y[i] - dataControl->KITECHData.food_pos[1]*0.001);
+//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[0].x[i] + diningWaypoints.get_side1_offset(dataControl->trayInfor.section1, 0));
+//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[0].y[i] + diningWaypoints.get_side1_offset(dataControl->trayInfor.section1, 1));
                         dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[0].z[i]);
-                        dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                        dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                        dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                        dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                        dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                        dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                         dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[0].beta[i]);
                         dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[0].d7[i]);
                         dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[0].option[i]);
@@ -935,14 +927,14 @@ void ControlMain::robotOperate(){
                 case DataControl::Side2:
                 {
                     for(unsigned int i = 0; i < dataControl->PathData.row - 2; i++){
-//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[i] + dataControl->KITECHData.food_pos[2]*0.001);
-//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[i] - dataControl->KITECHData.food_pos[3]*0.001);
-                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[i] + diningWaypoints.get_side2_offset(dataControl->trayInfor.section2, 0));
-                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[i] + diningWaypoints.get_side2_offset(dataControl->trayInfor.section2, 1));
+                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[i] + dataControl->KITECHData.food_pos[2]*0.001);
+                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[i] - dataControl->KITECHData.food_pos[3]*0.001);
+//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[i] + diningWaypoints.get_side2_offset(dataControl->trayInfor.section2, 0));
+//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[i] + diningWaypoints.get_side2_offset(dataControl->trayInfor.section2, 1));
                         dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[1].z[i]);
-                        dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                        dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                        dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                        dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                        dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                        dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                         dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[1].beta[i]);
                         dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[1].d7[i]);
                         dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[1].option[i]);
@@ -952,20 +944,20 @@ void ControlMain::robotOperate(){
                 }
                 case DataControl::Side3:
                 {
-//                    for(unsigned int i = 0; i < dataControl->PathData.row - 2; i++){
-////                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[i] + dataControl->KITECHData.food_pos[4]*0.001);
-////                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[i] - dataControl->KITECHData.food_pos[5]*0.001);
-//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[i]/* + side_offset[dataControl->trayInfor.section3*2]*/);
-//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[i]/* + side_offset[dataControl->trayInfor.section3*2 + 1]*/);
-//                        dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[2].z[i]);
-//                        dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-//                        dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-//                        dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
-//                        dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[2].beta[i]);
-//                        dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[2].d7[i]);
-//                        dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[2].option[i]);
-//                    }
-//                    dataControl->trayInfor.section3_cnt++;
+                    for(unsigned int i = 0; i < dataControl->PathData.row - 2; i++){
+                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[i] + dataControl->KITECHData.food_pos[4]*0.001);
+                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[i] - dataControl->KITECHData.food_pos[5]*0.001);
+//                        dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[2].x[i] + diningWaypoints.get_side3_offset(dataControl->trayInfor.section3, 0));
+//                        dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[2].y[i] + diningWaypoints.get_side3_offset(dataControl->trayInfor.section3, 1));
+                        dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[2].z[i]);
+                        dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                        dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                        dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
+                        dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[2].beta[i]);
+                        dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[2].d7[i]);
+                        dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[2].option[i]);
+                    }
+                    dataControl->trayInfor.section3_cnt++;
                     break;
                 }
                 case DataControl::Soup:
@@ -974,9 +966,9 @@ void ControlMain::robotOperate(){
                         dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[3].x[i]);
                         dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[3].y[i]);
                         dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[3].z[i]);
-                        dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                        dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                        dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                        dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                        dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                        dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                         dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[3].beta[i]);
                         dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[3].d7[i]);
                         dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[3].option[i]);
@@ -989,9 +981,9 @@ void ControlMain::robotOperate(){
                         dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[4].x[i] + diningWaypoints.get_side5_x_offset(dataControl->trayInfor.section5));
                         dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[4].y[i] + diningWaypoints.get_side5_y_offset(dataControl->trayInfor.section5));
                         dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[4].z[i]);
-                        dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                        dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                        dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                        dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                        dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                        dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                         dataControl->PathData.point_beta.push_back(diningWaypoints.diningSection[4].beta[i]);
                         dataControl->PathData.point_d7.push_back(diningWaypoints.diningSection[4].d7[i]);
                         dataControl->PathData.point_option.push_back(diningWaypoints.diningSection[4].option[i]);
@@ -1010,15 +1002,15 @@ void ControlMain::robotOperate(){
 
                     dataControl->PathData.point_px.push_back(dataControl->PathData.teaching_pose[0]);
                     dataControl->PathData.point_py.push_back(dataControl->PathData.teaching_pose[1]);
-//                    if(dataControl->PathData.teaching_beta != 0){
-//                        dataControl->PathData.point_pz.push_back(dataControl->PathData.teaching_pose[2] + (0.168 - 0.019)*sin(abs(dataControl->PathData.teaching_beta)*DEG2RAD) + 0.015);
-//                    }
-//                    else{
-                        dataControl->PathData.point_pz.push_back(dataControl->PathData.teaching_pose[2]);
-//                    }
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    //                    if(dataControl->PathData.teaching_beta != 0){
+                    //                        dataControl->PathData.point_pz.push_back(dataControl->PathData.teaching_pose[2] + (0.168 - 0.019)*sin(abs(dataControl->PathData.teaching_beta)*DEG2RAD) + 0.015);
+                    //                    }
+                    //                    else{
+                    dataControl->PathData.point_pz.push_back(dataControl->PathData.teaching_pose[2]);
+                    //                    }
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
 
                     dataControl->cur_beta = dataControl->RobotData.cur_position[6]*ENC2DEG*(-32.0/25.0);
                     func_q6q7_to_d7(dataControl->RobotData.cur_position[6]*ENC2DEG, dataControl->RobotData.cur_position[5]*ENC2DEG, &dataControl->cur_d7);
@@ -1037,16 +1029,16 @@ void ControlMain::robotOperate(){
                     }
                     else{
                         dataControl->dining_delay_cnt++;
-//                        rt_printf("dining delay cnt : %d\n", dataControl->dining_delay_cnt);
+                        //                        rt_printf("dining delay cnt : %d\n", dataControl->dining_delay_cnt);
                         return;
                     }
 
                     dataControl->PathData.point_px.push_back(diningWaypoints.diningSection[1].x[0]);
                     dataControl->PathData.point_py.push_back(diningWaypoints.diningSection[1].y[0]);
                     dataControl->PathData.point_pz.push_back(diningWaypoints.diningSection[1].z[0]);
-                    dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                    dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                    dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                    dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                    dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                    dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
                     dataControl->PathData.point_beta.push_back(0);
                     dataControl->PathData.point_d7.push_back(0);
 
@@ -1093,9 +1085,9 @@ void ControlMain::robotOperate(){
                 dataControl->PathData.point_px.push_back(dataControl->RobotData.present_end_pose[0]);
                 dataControl->PathData.point_py.push_back(dataControl->RobotData.present_end_pose[1]);
                 dataControl->PathData.point_pz.push_back(dataControl->RobotData.present_end_pose[2]);
-                dataControl->PathData.point_rx.push_back(dataControl->RobotData.present_end_pose[3]);
-                dataControl->PathData.point_ry.push_back(dataControl->RobotData.present_end_pose[4]);
-                dataControl->PathData.point_rz.push_back(dataControl->RobotData.present_end_pose[5]);
+                dataControl->PathData.point_rx.push_back(feedingOrientation[0]);
+                dataControl->PathData.point_ry.push_back(feedingOrientation[1]);
+                dataControl->PathData.point_rz.push_back(feedingOrientation[2]);
 
                 dataControl->cur_beta = dataControl->RobotData.cur_position[6]*ENC2DEG*(-32.0/25.0);
                 func_q6q7_to_d7(dataControl->RobotData.cur_position[6]*ENC2DEG, dataControl->RobotData.cur_position[5]*ENC2DEG, &dataControl->cur_d7);
@@ -1130,6 +1122,7 @@ void ControlMain::robotOperate(){
             else{
                 robotPathGenerate(dataControl->PathData.point_px, dataControl->PathData.point_py, dataControl->PathData.point_pz, dataControl->PathData.point_beta, dataControl->PathData.point_d7, dataControl->PathData.point_option, 0);
             }
+//            robotPathGenerate(dataControl->PathData.point_px, dataControl->PathData.point_py, dataControl->PathData.point_pz, dataControl->PathData.point_rx, dataControl->PathData.point_ry, dataControl->PathData.point_rz);
 
             dataControl->ClientToServer.opMode = DataControl::RunMode;
             dataControl->RobotData.run_mode = DataControl::RunCmd;
@@ -1208,35 +1201,35 @@ void ControlMain::robotPathGenerate(std::vector<double> px, std::vector<double> 
         path_generator(pz[i], pz[i + 1], dataControl->PathData.total_time[i + 1] - dataControl->PathData.total_time[i], dataControl->PathData.acc_time[i], step_size, &dataControl->PathData.movePath[i].path_z, i);
     }
 
-    //    dataControl->PathData.point_theta.push_back(0);
-    //    for(uint8_t i = 0; i < dataControl->PathData.row - 1; i++){
-    //        double R_init[9], R_final[9], r[3], theta;
-    //        RobotArm::zyx2mat(rz[i], ry[i], rx[i], R_init);
-    //        RobotArm::zyx2mat(rz[i + 1], ry[i + 1], rx[i + 1], R_final);
-    //        RobotArm::mat_to_axis_angle(R_init, R_final, r, &theta);
-    //        memcpy(dataControl->PathData.movePath[i].r, r, sizeof(double)*3);
-    //        dataControl->PathData.point_theta.push_back(theta);
+    dataControl->PathData.point_theta.push_back(0);
+    for(uint8_t i = 0; i < dataControl->PathData.row - 1; i++){
+        double R_init[9], R_final[9], r[3], theta;
+        RobotArm::zyx2mat(rz[i], ry[i], rx[i], R_init);
+        RobotArm::zyx2mat(rz[i + 1], ry[i + 1], rx[i + 1], R_final);
+        RobotArm::mat_to_axis_angle(R_init, R_final, r, &theta);
+        memcpy(dataControl->PathData.movePath[i].r, r, sizeof(double)*3);
+        dataControl->PathData.point_theta.push_back(theta);
 
-    //        //        rt_printf("r : %f, %f, %f, %f\n", r[0], r[1], r[2], theta);
-    //    }
+        //        rt_printf("r : %f, %f, %f, %f\n", r[0], r[1], r[2], theta);
+    }
 
     for(uint8_t i = 0; i < dataControl->PathData.row - 1; i++){
-        //        path_generator(0, dataControl->PathData.point_theta[i + 1],
-        //                dataControl->PathData.total_time[i + 1] - dataControl->PathData.total_time[i], dataControl->PathData.acc_time[i], step_size, &dataControl->PathData.movePath[i].path_theta, i);
+        path_generator(0, dataControl->PathData.point_theta[i + 1],
+                dataControl->PathData.total_time[i + 1] - dataControl->PathData.total_time[i], dataControl->PathData.acc_time[i], step_size, &dataControl->PathData.movePath[i].path_theta, i);
 
         dataControl->PathData.movePath[i].data_size = dataControl->PathData.movePath[i].path_x.size();
         rt_printf("section %d path size : %d\n", i, dataControl->PathData.movePath[i].data_size);
     }
 
-    // int indx = 1;
-    // for (int i = 0; i < dataControl->PathData.row - 1; i++){
-    //     for (uint j = 0; j < dataControl->PathData.movePath[i].path_x.size(); j++){
-    //         printf("%d, %f, %f, %f\n",
-    //                indx++, dataControl->PathData.movePath[i].path_x[j], dataControl->PathData.movePath[i].path_y[j], dataControl->PathData.movePath[i].path_z[j]);
+    //     int indx = 1;
+    //     for (int i = 0; i < dataControl->PathData.row - 1; i++){
+    //         for (uint j = 0; j < dataControl->PathData.movePath[i].path_x.size(); j++){
+    //             printf("%d, %f, %f, %f\n",
+    //                    indx++, dataControl->PathData.movePath[i].path_x[j], dataControl->PathData.movePath[i].path_y[j], dataControl->PathData.movePath[i].path_z[j]);
+    //         }
     //     }
-    // }
 
-    // dataControl->ClientToServer.opMode = DataControl::OpMode::Wait;
+    //     dataControl->ClientToServer.opMode = DataControl::Wait;
 }
 
 void ControlMain::robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> beta, std::vector<double> d7, std::vector<int> option, double offset)
@@ -1262,14 +1255,14 @@ void ControlMain::robotPathGenerate(std::vector<double> px, std::vector<double> 
         rt_printf("section %d path size : %d\n", i, dataControl->PathData.movePath[i].data_size);
     }
 
-//     int indx = 1;
-//     for (int i = 0; i < dataControl->PathData.row - 1; i++){
-//         for (uint j = 0; j < dataControl->PathData.movePath[i].path_x.size(); j++){
-//             rt_printf("%d, %f, %f, %f\n", indx++, dataControl->PathData.movePath[i].path_x[j], dataControl->PathData.movePath[i].path_y[j], dataControl->PathData.movePath[i].path_z[j]);
-//         }
-//     }
+    //     int indx = 1;
+    //     for (int i = 0; i < dataControl->PathData.row - 1; i++){
+    //         for (uint j = 0; j < dataControl->PathData.movePath[i].path_x.size(); j++){
+    //             rt_printf("%d, %f, %f, %f\n", indx++, dataControl->PathData.movePath[i].path_x[j], dataControl->PathData.movePath[i].path_y[j], dataControl->PathData.movePath[i].path_z[j]);
+    //         }
+    //     }
 
-//     dataControl->ClientToServer.opMode = DataControl::Wait;
+    //     dataControl->ClientToServer.opMode = DataControl::Wait;
 }
 
 void ControlMain::robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> beta, std::vector<double> d7)
@@ -1413,10 +1406,10 @@ void ControlMain::path_generator_circle(double p1, double p2, double pcx, double
 
 void ControlMain::func_q6d7_to_q7(double q6, double d7, double *q7)
 {
-//    if(d7 >= 25){
-//        d7 = 25;
-//    }
-//    else
+    //    if(d7 >= 25){
+    //        d7 = 25;
+    //    }
+    //    else
     if(d7 <= -25){
         d7 = -25;
     }
