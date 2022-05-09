@@ -16,6 +16,15 @@ TcpServer::TcpServer(DataControl* _dataControl)
 
     comm_manager_run = false;
     dio_comm_run = false;
+
+    recv_path_comm_run = false;
+    send_path_comm_run = false;
+
+    send_dining_infor_comm_run = false;
+
+    offset_comm_run = false;
+
+    port = 0;
 }
 
 TcpServer::~TcpServer(){
@@ -37,68 +46,143 @@ void TcpServer::setCommPeriod(unsigned int _time)
 }
 
 void TcpServer::stop(){
-    if(port == 5050){
-        if(recv_comm_run){
-            pthread_cancel(recv_comm_thread);
-            usleep(10000);
-            rt_printf("Finished Comm Rx Task\n");
-        }
-        else{
-            rt_printf("Comm Rx Thread not running...\n");
-        }
+    switch(port){
+        case 5050:
+        {
+            if(recv_comm_run){
+                pthread_cancel(recv_comm_thread);
+                usleep(10000);
+                printf("Finished Comm Rx Task\n");
+            }
+            else{
+                printf("Comm Rx Thread not running...\n");
+            }
 
-        if(send_comm_run){
-            pthread_cancel(send_comm_thread);
-            usleep(10000);
-            rt_printf("Finished Comm Tx Task\n");
-        }
-        else{
-            rt_printf("Comm Tx Thread not running...\n");
-        }
-    }
-    else if(port == 5053){
-        if(recv_latte_comm_run){
-            pthread_cancel(recv_latte_comm_thread);
-            usleep(10000);
-            rt_printf("Finished LATTE Comm Rx Task\n");
-        }
-        else{
-            rt_printf("Comm Latte Rx Thread not running...\n");
-        }
+            if(send_comm_run){
+                pthread_cancel(send_comm_thread);
+                usleep(10000);
+                printf("Finished Comm Tx Task\n");
+            }
+            else{
+                printf("Comm Tx Thread not running...\n");
+            }
 
-        if(send_latte_comm_run){
-            pthread_cancel(send_latte_comm_thread);
-            usleep(10000);
-            rt_printf("Finished LATTE Comm Tx Task\n");
+            break;
         }
-        else{
-            rt_printf("Comm Latte Tx Thread not running...\n");
+        case 5053:
+        {
+            if(recv_latte_comm_run){
+                pthread_cancel(recv_latte_comm_thread);
+                usleep(10000);
+                printf("Finished LATTE Comm Rx Task\n");
+            }
+            else{
+                printf("Comm Latte Rx Thread not running...\n");
+            }
+
+            if(send_latte_comm_run){
+                pthread_cancel(send_latte_comm_thread);
+                usleep(10000);
+                printf("Finished LATTE Comm Tx Task\n");
+            }
+            else{
+                printf("Comm Latte Tx Thread not running...\n");
+            }
+
+            break;
         }
-    }
-    else if(port == 5059){
-        if(dio_comm_run){
-            pthread_cancel(dio_comm_thread);
-            usleep(10000);
-            rt_printf("Finished DIO Comm Thread\n");
+        case 5059:
+        {
+            if(dio_comm_run){
+                pthread_cancel(dio_comm_thread);
+                usleep(10000);
+                printf("Finished DIO Comm Thread\n");
+            }
+            else{
+                printf("Comm DIO Thread not running...\n");
+            }
+
+            break;
         }
-        else{
-            rt_printf("Comm DIO Thread not running...\n");
+        case 5051:
+        {
+            if(temp_comm_run){
+                pthread_cancel(temp_comm_thread);
+                usleep(10000);
+                printf("Finished Temp Comm Thread\n");
+            }
+            else{
+                printf("Comm Temp Thread not running...\n");
+            }
+
+            break;
         }
-    }
-    else if(port == 5051){
-        if(temp_comm_run){
-            pthread_cancel(temp_comm_thread);
-            usleep(10000);
-            rt_printf("Finished Temp Comm Thread\n");
+        case 5052:
+        {
+            if(recv_path_comm_run){
+                pthread_cancel(recv_path_comm_thread);
+                usleep(10000);
+                printf("Finished Comm Path Rx Task\n");
+            }
+            else{
+                printf("Comm Path Rx Thread not running...\n");
+            }
+
+            if(send_path_comm_run){
+                pthread_cancel(send_path_comm_thread);
+                usleep(10000);
+                printf("Finished Path Comm Tx Task\n");
+            }
+            else{
+                printf("Comm Path Tx Thread not running...\n");
+            }
+            break;
         }
-        else{
-            rt_printf("Comm Temp Thread not running...\n");
+        case 5054:
+        {
+            if(send_dining_infor_comm_run){
+                pthread_cancel(send_dining_infor_comm_thread);
+                usleep(10000);
+                printf("Finished Comm Dining infor Tx Task\n");
+            }
+            else{
+                printf("Comm Dining Infor Tx Thread not running...\n");
+            }
+            break;
         }
+        case 5058:
+        {
+            if(key_comm_run){
+                pthread_cancel(key_comm_thread);
+                usleep(100);
+                printf("Finished Comm Key Rx Task\n");
+            }
+            else{
+                printf("Comm Key Rx Thread not running...\n");
+            }
+            break;
+        }
+        case 5056:
+        {
+            if(offset_comm_run){
+                pthread_cancel(offset_comm_thread);
+                usleep(100);
+                printf("Finished Comm Offset Rx Task\n");
+            }
+            else{
+                printf("Comm Offset Rx Thread not running...\n");
+            }
+            break;
+        }
+        default:
+            break;
     }
 
-    pthread_cancel(comm_manager_thread);
-    usleep(10000);
-    rt_printf("Finished Comm Manager Thread\n");
+    if(comm_manager_run){
+        pthread_cancel(comm_manager_thread);
+        usleep(10000);
+        printf("Finished Comm Manager Thread\n");
+    }
 }
 
 void *TcpServer::comm_manager_func(void *arg)
@@ -109,129 +193,148 @@ void *TcpServer::comm_manager_func(void *arg)
 
     pTcpServer->initSocket();
 
-    if(pTcpServer->port == 5050){
-        while(pTcpServer->comm_manager_run){
-            pTcpServer->connectSocket();
+    while(pTcpServer->comm_manager_run){
+        switch(pTcpServer->port)
+        {
+            case 5050:
+            {
+                pTcpServer->connectSocket();
 
-            pthread_create(&pTcpServer->recv_comm_thread, NULL, pTcpServer->recv_comm_func, pTcpServer);
-            pthread_create(&pTcpServer->send_comm_thread, NULL, pTcpServer->send_comm_func, pTcpServer);
+                pthread_create(&pTcpServer->recv_comm_thread, NULL, pTcpServer->recv_comm_func, pTcpServer);
+                pthread_create(&pTcpServer->send_comm_thread, NULL, pTcpServer->send_comm_func, pTcpServer);
 
-            pthread_join(pTcpServer->recv_comm_thread, NULL);
-            usleep(10000);
+                pthread_join(pTcpServer->recv_comm_thread, NULL);
+                usleep(10000);
 
-            pthread_join(pTcpServer->send_comm_thread, NULL);
-            usleep(10000);
+                pthread_join(pTcpServer->send_comm_thread, NULL);
+                usleep(10000);
 
-            pthread_cancel(pTcpServer->recv_comm_thread);
-            usleep(10000);
+                pthread_cancel(pTcpServer->recv_comm_thread);
+                usleep(10000);
 
-            pthread_cancel(pTcpServer->send_comm_thread);
-            usleep(10000);
-        }
-    }
-    else if(pTcpServer->port == 5053){
-        while(pTcpServer->comm_manager_run){
-            pTcpServer->connectSocket();
+                pthread_cancel(pTcpServer->send_comm_thread);
+                usleep(10000);
 
-            pthread_create(&pTcpServer->recv_latte_comm_thread, NULL, pTcpServer->recv_latte_comm_func, pTcpServer);
-            pthread_create(&pTcpServer->send_latte_comm_thread, NULL, pTcpServer->send_latte_comm_func, pTcpServer);
-
-            pthread_join(pTcpServer->recv_latte_comm_thread, NULL);
-            usleep(10000);
-
-            pthread_join(pTcpServer->send_latte_comm_thread, NULL);
-            usleep(10000);
-
-            pthread_cancel(pTcpServer->recv_latte_comm_thread);
-            usleep(10000);
-
-            pthread_cancel(pTcpServer->send_latte_comm_thread);
-            usleep(10000);
-        }
-    }
-    else if(pTcpServer->port == 5059){
-        while(pTcpServer->comm_manager_run){
-            pTcpServer->connectSocket();
-
-            pthread_create(&pTcpServer->dio_comm_thread, NULL, pTcpServer->dio_comm_func, pTcpServer);
-
-            pthread_join(pTcpServer->dio_comm_thread, NULL);
-            usleep(10000);
-
-            pthread_cancel(pTcpServer->dio_comm_thread);
-            usleep(10000);
-        }
-    }
-    else if(pTcpServer->port == 5051){
-        while(pTcpServer->comm_manager_run){
-            pTcpServer->connectSocket();
-
-            pthread_create(&pTcpServer->temp_comm_thread, NULL, pTcpServer->temp_comm_func, pTcpServer);
-
-            pthread_join(pTcpServer->temp_comm_thread, NULL);
-            usleep(10000);
-
-            pthread_cancel(pTcpServer->temp_comm_thread);
-            usleep(10000);
-        }
-    }
-    return NULL;
-}
-
-void *TcpServer::dio_comm_func(void *arg){
-    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
-
-    pTcpServer->dio_comm_run = true;
-
-    while(pTcpServer->dio_comm_run){
-        memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
-        pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
-
-        if(pTcpServer->byteLen > 0){
-//            rt_printf("[DIO] Received byteLen : %ld\n", pTcpServer->byteLen);
-//            rt_printf("[DIO] Received data : ");
-//            for(uint8_t i = 0; i < pTcpServer->byteLen; i++){
-//                rt_printf("%d ", pTcpServer->bufRecv[i]);
-//            }
-//            rt_printf("\n\n");
-
-            pTcpServer->dataControl->key_value = KEY_ESC;
-            if(pTcpServer->dataControl->ClientToServer.opMode == DataControl::Wait){
-                if(pTcpServer->bufRecv[1] == 49){
-                    pTcpServer->dataControl->key_value = KEY_Z;
-                    rt_printf("Pressed key z\n");
-                    while(pTcpServer->dataControl->key_value == KEY_Z){
-                        usleep(10000);
-                    }
-                }
-
-                if(pTcpServer->bufRecv[4] == 49){
-                    pTcpServer->dataControl->key_value = KEY_X;
-                    rt_printf("Pressed key x\n");
-                    while(pTcpServer->dataControl->key_value == KEY_Z){
-                        usleep(10000);
-                    }
-                }
-
-                if(pTcpServer->bufRecv[7] == 49){
-
-                }
+                break;
             }
+            case 5053:
+            {
+                pTcpServer->connectSocket();
 
-            memset(pTcpServer->bufSend, 0, MAXSENDBUFSIZE);
-            pTcpServer->bufSend[0] = static_cast<char>(pTcpServer->dataControl->key_value);
-            pTcpServer->sendByteLen = send(pTcpServer->clientSockFD, pTcpServer->bufSend, 1, 0);
+                pthread_create(&pTcpServer->recv_latte_comm_thread, NULL, pTcpServer->recv_latte_comm_func, pTcpServer);
+                pthread_create(&pTcpServer->send_latte_comm_thread, NULL, pTcpServer->send_latte_comm_func, pTcpServer);
 
+                pthread_join(pTcpServer->recv_latte_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_join(pTcpServer->send_latte_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->recv_latte_comm_thread);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->send_latte_comm_thread);
+                usleep(10000);
+
+                break;
+            }
+            case 5059:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->dio_comm_thread, NULL, pTcpServer->dio_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->dio_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->dio_comm_thread);
+                usleep(10000);
+
+                break;
+            }
+            case 5051:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->temp_comm_thread, NULL, pTcpServer->temp_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->temp_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->temp_comm_thread);
+                usleep(10000);
+
+                break;
+            }
+            case 5052:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->recv_path_comm_thread, NULL, pTcpServer->recv_path_comm_func, pTcpServer);
+                pthread_create(&pTcpServer->send_path_comm_thread, NULL, pTcpServer->send_path_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->recv_path_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_join(pTcpServer->send_path_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->recv_path_comm_thread);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->send_path_comm_thread);
+                usleep(10000);
+
+                break;
+            }
+            case 5054:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->send_dining_infor_comm_thread, NULL, pTcpServer->send_dining_infor_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->send_dining_infor_comm_thread, NULL);
+                usleep(10000);
+
+                pthread_cancel(pTcpServer->send_dining_infor_comm_thread);
+                usleep(10000);
+
+                break;
+            }
+            case 5058:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->key_comm_thread, NULL, pTcpServer->key_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->key_comm_thread, NULL);
+                usleep(100);
+
+                pthread_cancel(pTcpServer->key_comm_thread);
+                usleep(100);
+
+                break;
+            }
+            case 5056:
+            {
+                pTcpServer->connectSocket();
+
+                pthread_create(&pTcpServer->offset_comm_thread, NULL, pTcpServer->offset_comm_func, pTcpServer);
+
+                pthread_join(pTcpServer->offset_comm_thread, NULL);
+                usleep(100);
+
+                pthread_cancel(pTcpServer->offset_comm_thread);
+                usleep(100);
+
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
-        else if(pTcpServer->byteLen == 0){
-            rt_printf("[DIO] Recv Disconnected\n");
-            pTcpServer->dio_comm_run = false;
-        }
-
-        usleep(100000);
     }
-
-    rt_printf("Finished Comm RX Thread(%d)\n", pTcpServer->port);
 
     return NULL;
 }
@@ -374,13 +477,71 @@ void *TcpServer::send_latte_comm_func(void *arg)
     return NULL;
 }
 
+void *TcpServer::dio_comm_func(void *arg){
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->dio_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->dio_comm_run){
+        memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
+        pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
+
+        if(pTcpServer->byteLen > 0){
+            //            rt_printf("[DIO] Received byteLen : %ld\n", pTcpServer->byteLen);
+            //            rt_printf("[DIO] Received data : ");
+            //            for(uint8_t i = 0; i < pTcpServer->byteLen; i++){
+            //                rt_printf("%d ", pTcpServer->bufRecv[i]);
+            //            }
+            //            rt_printf("\n\n");
+
+            pTcpServer->dataControl->key_value = 0;
+            if(pTcpServer->dataControl->ClientToServer.opMode == DataControl::Wait){
+                if(pTcpServer->bufRecv[1] == 49){
+                    pTcpServer->dataControl->key_value = KEY_Z;
+                    rt_printf("Pressed key z\n");
+                    while(pTcpServer->dataControl->key_value == KEY_Z){
+                        usleep(10000);
+                    }
+                }
+
+                if(pTcpServer->bufRecv[4] == 49){
+                    pTcpServer->dataControl->key_value = KEY_X;
+                    rt_printf("Pressed key x\n");
+                    while(pTcpServer->dataControl->key_value == KEY_X){
+                        usleep(10000);
+                    }
+                }
+
+                if(pTcpServer->bufRecv[7] == 49){
+
+                }
+            }
+
+            memset(pTcpServer->bufSend, 0, MAXSENDBUFSIZE);
+            pTcpServer->bufSend[0] = static_cast<char>(pTcpServer->dataControl->key_value);
+            pTcpServer->sendByteLen = send(pTcpServer->clientSockFD, pTcpServer->bufSend, 1, 0);
+
+        }
+        else if(pTcpServer->byteLen == 0){
+            rt_printf("[DIO] Recv Disconnected\n");
+            pTcpServer->dio_comm_run = false;
+        }
+
+        usleep(100000);
+    }
+
+    rt_printf("Finished Comm RX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
 void *TcpServer::temp_comm_func(void *arg)
 {
     TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
 
     pTcpServer->temp_comm_run = true;
 
-    while(pTcpServer->temp_comm_run){
+    while(pTcpServer->comm_manager_run && pTcpServer->temp_comm_run){
         memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
         pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
 
@@ -457,8 +618,175 @@ void *TcpServer::temp_comm_func(void *arg)
     return NULL;
 }
 
+void *TcpServer::recv_path_comm_func(void *arg)
+{
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->recv_path_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->recv_path_comm_run){
+        if(pTcpServer->isConnected()){
+            memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
+            pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
+
+            if(pTcpServer->byteLen > 0){
+                rt_printf("[PATH] Received byteLen : %ld\n", pTcpServer->byteLen);
+                //                rt_printf("[PATH] Received data : ");
+                //                for(uint8_t i = 0; i < pTcpServer->byteLen; i++){
+                //                    rt_printf("%d ", pTcpServer->bufRecv[i]);
+                //                }
+                //                rt_printf("\n\n");
+
+                pTcpServer->recvDataPath();
+            }
+            else if(pTcpServer->byteLen <= 0){
+                rt_printf("[PATH] Recv Disconnected\n");
+                pTcpServer->connected = false;
+            }
+        }
+        else{
+            pTcpServer->recv_path_comm_run = false;
+            break;
+        }
+
+        usleep(pTcpServer->comm_period);
+    }
+
+    rt_printf("Finished Comm RX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
+void *TcpServer::send_path_comm_func(void *arg)
+{
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->sendByteLen = 0;
+    pTcpServer->send_path_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->send_path_comm_run){
+        if(pTcpServer->connected){
+            pTcpServer->sendDataPath();
+
+            if(pTcpServer->sendByteLen < 0){
+                printf("[PATH] Send Disconnected(%d)\n", pTcpServer->port);
+                pTcpServer->connected = false;
+            }
+        }
+        else{
+            pTcpServer->send_path_comm_run = false;
+            break;
+        }
+
+        usleep(pTcpServer->comm_period);
+    }
+
+    rt_printf("Finished Comm TX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
+void *TcpServer::send_dining_infor_comm_func(void *arg)
+{
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->sendByteLen = 0;
+    pTcpServer->send_dining_infor_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->send_dining_infor_comm_run){
+        if(pTcpServer->connected){
+
+            pTcpServer->sendDataDiningInfor();
+
+            if(pTcpServer->sendByteLen < 0){
+                printf("[DINING INFOR] Send Disconnected(%d)\n", pTcpServer->port);
+                pTcpServer->connected = false;
+            }
+        }
+        else{
+            pTcpServer->send_dining_infor_comm_run = false;
+            break;
+        }
+
+        usleep(pTcpServer->comm_period);
+    }
+
+    rt_printf("Finished Comm TX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
+void *TcpServer::key_comm_func(void *arg)
+{
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->key_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->key_comm_run){
+        memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
+        pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
+
+        if(pTcpServer->byteLen > 0){
+            //            printf("[KEY] Received byteLen : %ld\n", pTcpServer->byteLen);
+            //            printf("[KEY] Received data : ");
+            //            for(uint8_t i = 0; i < pTcpServer->byteLen; i++){
+            //                printf("%d ", pTcpServer->bufRecv[i]);
+            //            }
+            //            printf("\n\n");
+
+            if(pTcpServer->bufRecv[2] > 0){
+                pTcpServer->recvDataKey();
+            }
+
+        }
+        else if(pTcpServer->byteLen == 0){
+            rt_printf("[KEY] Recv Disconnected\n");
+            pTcpServer->key_comm_run = false;
+        }
+
+        usleep(100);
+    }
+
+    rt_printf("Finished Comm RX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
+void *TcpServer::offset_comm_func(void *arg)
+{
+    TcpServer *pTcpServer = static_cast<TcpServer*>(arg);
+
+    pTcpServer->offset_comm_run = true;
+
+    while(pTcpServer->comm_manager_run && pTcpServer->offset_comm_run){
+        memset(pTcpServer->bufRecv, 0, MAXRECEIVEBUFSIZE);
+        pTcpServer->byteLen = recv(pTcpServer->clientSockFD, pTcpServer->bufRecv, MAXRECEIVEBUFSIZE, 0);
+
+        if(pTcpServer->byteLen > 0){
+            //            printf("[KEY] Received byteLen : %ld\n", pTcpServer->byteLen);
+            //            printf("[KEY] Received data : ");
+            //            for(uint8_t i = 0; i < pTcpServer->byteLen; i++){
+            //                printf("%d ", pTcpServer->bufRecv[i]);
+            //            }
+            //            printf("\n\n");
+
+            pTcpServer->recvDataOffset();
+        }
+        else if(pTcpServer->byteLen == 0){
+            rt_printf("[OFFSET] Recv Disconnected\n");
+            pTcpServer->offset_comm_run = false;
+        }
+
+        usleep(100);
+    }
+
+    rt_printf("Finished Comm RX Thread(%d)\n", pTcpServer->port);
+
+    return NULL;
+}
+
 void TcpServer::recvDataLatte(){
-    if(bufRecv[0] == SOP_RX && dataControl->ClientToServer.opMode == DataControl::Wait && !dataControl->feeding /* && (buf[3] == EOP || buf[22] == EOP)*/){
+    if(bufRecv[0] == SOP_RX){
         dataControl->KITECHData.camera_request = false;
         dataControl->KITECHData.interface_cmd = bufRecv[1];
         dataControl->KITECHData.interface_sub = bufRecv[2];
@@ -482,191 +810,206 @@ void TcpServer::recvDataLatte(){
                 rt_printf("%d, %d\n", dataControl->KITECHData.food_pos[6], dataControl->KITECHData.food_pos[7]);
                 rt_printf("%d, %d\n", dataControl->KITECHData.food_pos[8], dataControl->KITECHData.food_pos[9]);
 
-                for(int i = 0; i < 10; i++){
-                    if(abs(dataControl->KITECHData.food_pos[i]) < 10 || abs(dataControl->KITECHData.food_pos[i]) > 200){
-                        rt_printf("Re-Send to KITECH request camera\n");
-                        dataControl->KITECHData.camera_request = true;
-                        usleep(3000000);
-                        dataControl->KITECHData.camera_request = false;
-                        break;
-                    }
+                dataControl->KITECHData.food_pos[0] = 0;
+                dataControl->KITECHData.food_pos[1] = 0;
+                dataControl->KITECHData.food_pos[2] = 0;
+                dataControl->KITECHData.food_pos[3] = 0;
+
+                //                dataControl->KITECHData.food_pos[4] = 0;
+                //                dataControl->KITECHData.food_pos[5] = 0;
+                if(dataControl->KITECHData.food_pos[4] < -33){
+                    dataControl->KITECHData.food_pos[4] = -33;
                 }
+                if(dataControl->KITECHData.food_pos[4] > 33){
+                    dataControl->KITECHData.food_pos[4] = 33;
+                }
+
+                dataControl->KITECHData.food_pos[6] = 0;
+                dataControl->KITECHData.food_pos[7] = 0;
+                dataControl->KITECHData.food_pos[8] = 0;
+                dataControl->KITECHData.food_pos[9] = 0;
+
+                dataControl->KITECHData.camera_request = false;
+                dataControl->KITECHData.receive_point = true;
+                dataControl->camera_wait = false;
+
                 break;
             }
-            case CMD_SECTION:
-            {
+            default:break;
+        }
+    }
+    if(bufRecv[0] == SOP_RX && dataControl->ClientToServer.opMode == DataControl::Wait && !dataControl->feeding && !dataControl->camera_wait){
+        dataControl->KITECHData.camera_request = false;
+        dataControl->KITECHData.interface_cmd = bufRecv[1];
+        dataControl->KITECHData.interface_sub = bufRecv[2];
 
-                dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                dataControl->operateMode.mode = DataControl::ReadyFeeding;
-
-
-                while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
-                    usleep(1000);
-                }
-
-                // choose section
-                if(dataControl->KITECHData.interface_sub == 1){
-                    rt_printf("Received Section Packet\n");
-                    dataControl->select_indx++;
-                    if(dataControl->select_indx >= 6) {
-                        dataControl->select_indx = 1;
-                    }
-//                    if(dataControl->select_indx == 3){
-//                        dataControl->select_indx = 4;
-//                    }
-                    rt_printf("Section Index : %d\n", dataControl->select_indx);
-                    dataControl->operateMode.section = dataControl->select_indx;
-                    dataControl->section_indx = dataControl->select_indx - 1;
-
-                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                    dataControl->operateMode.mode = DataControl::FeedingSwitch;
-                }
-                else if(dataControl->KITECHData.interface_sub == 2){
-                    rt_printf("Received Feeding Packet\n");
-                    rt_printf("Section : %d\n", dataControl->section_indx);
-//                    dataControl->operateMode.section = dataControl->section_indx + 1;
-
-                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                    dataControl->operateMode.mode = DataControl::Feeding;
-
-                    switch(dataControl->section_indx){
-                        case 0: // side 1
-                        {
-                            dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%4;
-                            rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
-                            dataControl->operateMode.section = DataControl::Side1;
-                            break;
-                        }
-                        case 1: // side 2
-                        {
-                            dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%2;
-                            rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
-                            dataControl->operateMode.section = DataControl::Side2;
-                            break;
-                        }
-                        case 2: // side 3
-                        {
-                            dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt%4;
-                            rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
-                            dataControl->operateMode.section = DataControl::Side3;
-                            break;
-                        }
-                        case 3: // soup
-                        {
-                            rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
-                            dataControl->operateMode.section = DataControl::Soup;
-                            break;
-                        }
-                        case 4: // rice
-                        {
-                            dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
-                            rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
-                            dataControl->operateMode.section = DataControl::Rice;
-                            break;
-                        }
-                    }
-                    dataControl->select_indx = dataControl->section_indx;
-                }
-                break;
+        if(!dataControl->robotStart){
+            if(dataControl->KITECHData.interface_cmd != CMD_TABLET_CHECK){
+                dataControl->key_value = KEY_Z;
             }
-            case CMD_FEEDING:
-            {
-                rt_printf("Received Feeding Packet\n");
-                rt_printf("Section : %d\n", dataControl->KITECHData.interface_sub);
-                dataControl->section_indx = dataControl->KITECHData.interface_sub - 1;
-
-//                if(dataControl->section_indx != 2)
-                {
-                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                    dataControl->operateMode.mode = DataControl::ReadyFeeding;
-
-                    while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
-                        usleep(1000);
-                    }
-
-                    dataControl->ClientToServer.opMode = DataControl::OperateMode;
-                    dataControl->operateMode.mode = DataControl::Feeding;
-                    switch(dataControl->section_indx){
-                        case 0: // side 1
-                        {
-                            dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%4;
-                            rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
-                            dataControl->operateMode.section = DataControl::Side1;
-                            break;
-                        }
-                        case 1: // side 2
-                        {
-                            dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%2;
-                            rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
-                            dataControl->operateMode.section = DataControl::Side2;
-                            break;
-                        }
-                        case 2: // side 3
-                        {
-                            dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt%4;
-                            rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
-                            dataControl->operateMode.section = DataControl::Side3;
-                            break;
-                        }
-                        case 3: // soup
-                        {
-                            rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
-                            dataControl->operateMode.section = DataControl::Soup;
-                            break;
-                        }
-                        case 4: // rice
-                        {
-                            dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
-                            rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
-                            dataControl->operateMode.section = DataControl::Rice;
-                            break;
-                        }
-                    }
-                    dataControl->select_indx = dataControl->section_indx;
-                }
-                break;
-            }
-            case CMD_TABLET_CHECK:
-            {
+            else{
                 if(dataControl->KITECHData.interface_sub == 1){
                     dataControl->KITECHData.tablet_connect = true;
+                    rt_printf("tabelt connected\n");
                 }
                 else{
                     dataControl->KITECHData.tablet_connect = false;
+                    rt_printf("tabelt disconnected\n");
                 }
-                break;
             }
-            case CMD_DINING_SPEED:
-            {
-                dataControl->KITECHData.dining_speed = bufRecv[2];
-                switch(dataControl->KITECHData.dining_speed){
-                    case 1:
-                        dataControl->dining_speed = 1.3;
-                        break;
-                    case 2:
-                        dataControl->dining_speed = 1.0;
-                        break;
-                    case 3:
-                        dataControl->dining_speed = 0.7;
-                        break;
-                    default:
-                        break;
-                }
+        }
+        else{
+            switch(dataControl->KITECHData.interface_cmd){
+                case CMD_FEEDING:
+                {
+                    rt_printf("Received Feeding Packet\n");
+                    rt_printf("Section : %d\n", dataControl->KITECHData.interface_sub);
+                    dataControl->section_indx = dataControl->KITECHData.interface_sub - 1;
+                    dataControl->button_mode = false;
 
-                rt_printf("dining speed : %d\n", dataControl->KITECHData.dining_speed);
-                break;
+                    if(dataControl->KITECHData.wait_feeding){
+                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                        dataControl->operateMode.mode = DataControl::WaitFeeding1;
+
+                        while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                            usleep(1000);
+                        }
+                    }
+
+                    //                if(dataControl->section_indx != 2)
+                    {
+                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                        dataControl->operateMode.mode = DataControl::ReadyFeeding;
+
+                        while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                            usleep(1000);
+                        }
+
+                        dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                        dataControl->operateMode.mode = DataControl::Feeding;
+                        switch(dataControl->section_indx){
+                            case 0: // side 1
+                            {
+                                dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%6;
+                                rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
+                                dataControl->operateMode.section = DataControl::Side1;
+                                break;
+                            }
+                            case 1: // side 2
+                            {
+                                dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%6;
+                                rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
+                                dataControl->operateMode.section = DataControl::Side2;
+                                break;
+                            }
+                            case 2: // side 3
+                            {
+                                dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt%4;
+                                rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
+                                dataControl->operateMode.section = DataControl::Side3;
+                                break;
+                            }
+                            case 3: // soup
+                            {
+                                rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
+                                dataControl->operateMode.section = DataControl::Soup;
+                                break;
+                            }
+                            case 4: // rice
+                            {
+                                dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
+                                rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
+                                dataControl->operateMode.section = DataControl::Rice;
+                                break;
+                            }
+                        }
+                        dataControl->select_indx = dataControl->section_indx;
+                    }
+                    break;
+                }
+                case CMD_TABLET_CHECK:
+                {
+                    if(dataControl->KITECHData.interface_sub == 1){
+                        dataControl->KITECHData.tablet_connect = true;
+                        rt_printf("tabelt connected\n");
+                    }
+                    else{
+                        dataControl->KITECHData.tablet_connect = false;
+                        rt_printf("tabelt disconnected\n");
+                    }
+                    break;
+                }
+                case CMD_TOOL:
+                {
+                    //                dataControl->KITECHData.dining_tool = bufRecv[3];
+                    //                if(dataControl->KITECHData.dining_tool == 1){
+                    //                    rt_printf("selected chopsticks\n");
+                    //                }
+                    //                else if(dataControl->KITECHData.dining_tool == 0){
+                    //                    rt_printf("selected spoon\n");
+                    //                }
+                    if(bufRecv[3] == 0){ // chopsticks
+                        dataControl->KITECHData.dining_tool = 1;
+                        rt_printf("selected chopsticks\n");
+                    }
+                    else if(bufRecv[3] == 1){ // spoon
+                        dataControl->KITECHData.dining_tool = 0;
+                        rt_printf("selected spoon\n");
+                    }
+                    break;
+                }
+                case CMD_DINING_SPEED:
+                {
+                    dataControl->KITECHData.dining_speed = bufRecv[2];
+                    switch(dataControl->KITECHData.dining_speed){
+                        case 1:
+                            dataControl->dining_speed = 1.3;
+                            break;
+                        case 2:
+                            dataControl->dining_speed = 1.0;
+                            break;
+                        case 3:
+                            dataControl->dining_speed = 0.7;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    rt_printf("dining speed : %d\n", dataControl->KITECHData.dining_speed);
+                    break;
+                }
+                case CMD_DINING_TIME:
+                {
+                    dataControl->KITECHData.dining_time = bufRecv[2];
+                    rt_printf("dining time : %d\n", dataControl->KITECHData.dining_time);
+                    dataControl->dining_delay = dataControl->KITECHData.dining_time*1000;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
-            case CMD_DINING_TIME:
-            {
-                dataControl->KITECHData.dining_time = bufRecv[2];
-                rt_printf("dining time : %d\n", dataControl->KITECHData.dining_time);
-                dataControl->dining_delay = dataControl->KITECHData.dining_time*1000;
+        }
+    }
+    else if(bufRecv[0] == SOP_RX && dataControl->ClientToServer.opMode == DataControl::OperateMode && dataControl->operateMode.section == DataControl::Home && dataControl->feeding){
+        dataControl->KITECHData.camera_request = false;
+        dataControl->KITECHData.interface_cmd = bufRecv[1];
+        dataControl->KITECHData.interface_sub = bufRecv[2];
+
+        switch(dataControl->KITECHData.interface_cmd){
+            case CMD_SECTION:
+            case CMD_FEEDING:
+                if(dataControl->dining_delay_cnt > 0){
+                    rt_printf("interrupt!!!\n");
+                    dataControl->KITECHData.dining_interrupt = true;
+                }
+                else{
+                    dataControl->KITECHData.dining_interrupt = false;
+                }
                 break;
-            }
             default:
-            {
                 break;
-            }
         }
     }
 }
@@ -678,15 +1021,109 @@ void TcpServer::sendDataLatte(){
         bufSend[0] = SOP_TX;
         bufSend[1] = 1;
         bufSend[2] = EOP;
+        dataControl->camera_wait = true;
+        usleep(5000000);
         sendByteLen = send(clientSockFD, bufSend, 3, 0);
-        rt_printf("Send to KITECH request camera\n");
+        if(sendByteLen > 0){
+            rt_printf("Send to KITECH request camera\n");
+        }
 
-        if(sendByteLen < 0){
-            rt_printf("Send Error\n");
-            comm_manager_run = false;
-            connected = false;
+        usleep(5000000);
+        dataControl->camera_wait = false;
 
-            return;
+        if(!dataControl->button_mode){
+            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+            dataControl->operateMode.mode = DataControl::WaitFeeding1;
+
+            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+            dataControl->operateMode.mode = DataControl::WaitFeeding2;
+
+            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            dataControl->ClientToServer.opMode = DataControl::ServoOnOff;
+            dataControl->ClientToServer.subMode = 0;
+
+            if(sendByteLen < 0){
+                rt_printf("Send Error\n");
+                comm_manager_run = false;
+                connected = false;
+
+                return;
+            }
+        }
+        else if(dataControl->button_mode){
+            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            if(sendByteLen < 0){
+                rt_printf("Send Error\n");
+                comm_manager_run = false;
+                connected = false;
+
+                return;
+            }
+
+            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+            dataControl->operateMode.mode = DataControl::ReadyFeeding;
+
+            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                usleep(1000);
+            }
+
+            dataControl->select_indx++;
+            if(dataControl->select_indx >= 6) {
+                dataControl->select_indx = 1;
+            }
+            rt_printf("Section Index : %d\n", dataControl->select_indx);
+            dataControl->operateMode.section = dataControl->select_indx;
+            dataControl->section_indx = dataControl->select_indx - 1;
+
+            switch(dataControl->section_indx){
+                case 0: // side 1
+                {
+                    dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%6;
+                    rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
+                    dataControl->operateMode.section = DataControl::Side1;
+                    break;
+                }
+                case 1: // side 2
+                {
+                    dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%6;
+                    rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
+                    dataControl->operateMode.section = DataControl::Side2;
+                    break;
+                }
+                case 2: // side 3
+                {
+                    dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt%4;
+                    rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
+                    dataControl->operateMode.section = DataControl::Side3;
+                    break;
+                }
+                case 3: // soup
+                {
+                    rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
+                    dataControl->operateMode.section = DataControl::Soup;
+                    break;
+                }
+                case 4: // rice
+                {
+                    dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
+                    rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
+                    dataControl->operateMode.section = DataControl::Rice;
+                    break;
+                }
+            }
+
+            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+            dataControl->operateMode.mode = DataControl::FeedingSwitch;
         }
     }
     dataControl->KITECHData.camera_request_old = dataControl->KITECHData.camera_request;
@@ -698,7 +1135,9 @@ void TcpServer::sendDataLatte(){
         bufSend[1] = 2;
         bufSend[2] = EOP;
         sendByteLen = send(clientSockFD, bufSend, 3, 0);
-        rt_printf("Send to KITECH tablet connect check\n");
+        if(sendByteLen > 0){
+            rt_printf("Send to KITECH tablet connect check\n");
+        }
 
         if(sendByteLen < 0){
             rt_printf("Send Error\n");
@@ -711,26 +1150,323 @@ void TcpServer::sendDataLatte(){
     dataControl->KITECHData.tablet_check_old = dataControl->KITECHData.tablet_check;
 }
 
+void TcpServer::sendDataDiningInfor(){
+    if(dataControl->diningInfor.dining_time_send && (dataControl->diningInfor.dining_time_send != dataControl->diningInfor.dining_time_send_old)){
+        memset(bufSend, 0, SENDBUFSIZE);
+
+        bufSend[0] = SOP_TX;
+        bufSend[1] = CMD_DINING_INFO;
+        int indx = 2;
+
+        bufSend[indx++] = dataControl->diningInfor.robot_id;
+        bufSend[indx++] = dataControl->diningInfor.dining_step;
+
+        for(int i = 0; i < 12; i++){
+            bufSend[indx++] = dataControl->diningInfor.dining_time_infor[i];
+        }
+        bufSend[indx++] = DataControl::Side1;
+        bufSend[indx++] = dataControl->trayInfor.section1_cnt;
+        bufSend[indx++] = DataControl::Side2;
+        bufSend[indx++] = dataControl->trayInfor.section2_cnt;
+        bufSend[indx++] = DataControl::Side3;
+        bufSend[indx++] = dataControl->trayInfor.section3_cnt;
+        bufSend[indx++] = DataControl::Soup;
+        bufSend[indx++] = dataControl->trayInfor.section4_cnt;
+        bufSend[indx++] = DataControl::Rice;
+        bufSend[indx++] = dataControl->trayInfor.section5_cnt;
+
+        bufSend[indx++] = EOP;
+
+        sendByteLen = send(clientSockFD, bufSend, indx, 0);
+        rt_printf("Send to GIST dining information\n");
+
+        for(int i = 0; i < indx; i++){
+            rt_printf("%d ", bufSend[i]);
+        }
+        rt_printf("\n");
+
+        //        if(sendByteLen < 0){
+        //            rt_printf("Send Error\n");
+        //            comm_manager_run = false;
+        //            connected = false;
+
+        //            return;
+        //        }
+        dataControl->diningInfor.dining_time_send = false;
+    }
+    dataControl->diningInfor.dining_time_send_old = dataControl->diningInfor.dining_time_send;
+}
+
+void TcpServer::recvDataKey()
+{
+    dataControl->KITECHData.interface_cmd = bufRecv[1];
+    dataControl->KITECHData.interface_sub = bufRecv[2];
+
+    if(!dataControl->robotStart){
+        if(dataControl->KITECHData.interface_cmd != CMD_TABLET_CHECK){
+            dataControl->key_value = KEY_Z;
+        }
+        else{
+            if(dataControl->KITECHData.interface_sub == 1){
+                dataControl->KITECHData.tablet_connect = true;
+                rt_printf("tabelt connected\n");
+            }
+            else{
+                dataControl->KITECHData.tablet_connect = false;
+                rt_printf("tabelt disconnected\n");
+            }
+        }
+    }
+
+    else{
+
+        if(dataControl->KITECHData.interface_sub == 3){
+            rt_printf("Received safe mode packet\n");
+
+            dataControl->safe_mode_enable ^= true;
+
+            rt_printf("Safe mode : %s\n", dataControl->safe_mode_enable ? "ON" : "OFF");
+
+            if(!dataControl->safe_mode_enable){
+                dataControl->collision_detect_enable = false;
+            }
+            ////
+            //// TODO : LED display
+            ////
+        }
+
+        //    rt_printf("bufRecv[0] : %s\n", bufRecv[0] == dataControl->ClientToServer.opMode ? "true" : "false");
+        //    rt_printf("feeding : %s\n", dataControl->feeding ? "true" : "false");
+        //    rt_printf("camera_wait : %s\n", dataControl->camera_wait ? "true" : "false");
+
+        else {
+            if(bufRecv[0] == SOP_RX && dataControl->ClientToServer.opMode == DataControl::Wait && !dataControl->feeding && !dataControl->camera_wait){
+                dataControl->KITECHData.camera_request = false;
+                //        dataControl->KITECHData.interface_cmd = bufRecv[1];
+                //        dataControl->KITECHData.interface_sub = bufRecv[2];
+
+                //        printf("[KEY] Received byteLen : %ld\n", byteLen);
+                //        printf("[KEY] Received data : ");
+                //        for(uint8_t i = 0; i < byteLen; i++){
+                //            printf("%d ", bufRecv[i]);
+                //        }
+                //        printf("\n\n");
+
+                switch(dataControl->KITECHData.interface_cmd){
+                    case CMD_SECTION:
+                    {
+                        dataControl->button_mode = true;
+                        if(dataControl->KITECHData.wait_feeding){
+                            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                            dataControl->operateMode.mode = DataControl::WaitFeeding1;
+
+                            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                                usleep(100);
+                            }
+
+                            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                            dataControl->operateMode.mode = DataControl::ReadyFeeding;
+
+                            while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                                usleep(100);
+                            }
+                        }
+
+                        if(!dataControl->button_mode){
+                            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                            dataControl->operateMode.mode = DataControl::ReadyFeeding;
+                        }
+
+                        while(!(dataControl->ClientToServer.opMode == DataControl::Wait)){
+                            usleep(100);
+                        }
+
+                        // choose section
+                        if(dataControl->KITECHData.interface_sub == 1){
+                            rt_printf("Received Section Packet\n");
+                            dataControl->select_indx++;
+                            if(dataControl->select_indx >= 6) {
+                                dataControl->select_indx = 1;
+                            }
+                            rt_printf("Section Index : %d\n", dataControl->select_indx);
+                            dataControl->operateMode.section = dataControl->select_indx;
+                            dataControl->section_indx = dataControl->select_indx - 1;
+
+                            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                            dataControl->operateMode.mode = DataControl::FeedingSwitch;
+
+                            switch(dataControl->section_indx){
+                                case 0: // side 1
+                                {
+                                    dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%6;
+                                    rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
+                                    dataControl->operateMode.section = DataControl::Side1;
+                                    break;
+                                }
+                                case 1: // side 2
+                                {
+                                    dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%6;
+                                    rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
+                                    dataControl->operateMode.section = DataControl::Side2;
+                                    break;
+                                }
+                                case 2: // side 3
+                                {
+                                    dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt%4;
+                                    rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
+                                    dataControl->operateMode.section = DataControl::Side3;
+                                    break;
+                                }
+                                case 3: // soup
+                                {
+                                    rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
+                                    dataControl->operateMode.section = DataControl::Soup;
+                                    break;
+                                }
+                                case 4: // rice
+                                {
+                                    dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
+                                    rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
+                                    dataControl->operateMode.section = DataControl::Rice;
+                                    break;
+                                }
+                            }
+                        }
+                        // feeding
+                        else if(dataControl->KITECHData.interface_sub == 2){
+                            rt_printf("Received Feeding Packet\n");
+                            rt_printf("Section : %d\n", dataControl->section_indx);
+                            //                    dataControl->operateMode.section = dataControl->section_indx + 1;
+
+                            dataControl->ClientToServer.opMode = DataControl::OperateMode;
+                            dataControl->operateMode.mode = DataControl::Feeding;
+
+                            switch(dataControl->section_indx){
+                                case 0: // side 1
+                                {
+                                    dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%6;
+                                    rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
+                                    dataControl->operateMode.section = DataControl::Side1;
+                                    break;
+                                }
+                                case 1: // side 2
+                                {
+                                    dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%6;
+                                    rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
+                                    dataControl->operateMode.section = DataControl::Side2;
+                                    break;
+                                }
+                                case 2: // side 3
+                                {
+                                    dataControl->trayInfor.section3 = dataControl->trayInfor.section3_cnt;
+                                    rt_printf("section3 count : %d, %d\n", dataControl->trayInfor.section3_cnt, dataControl->trayInfor.section3);
+                                    dataControl->operateMode.section = DataControl::Side3;
+                                    break;
+                                }
+                                case 3: // soup
+                                {
+                                    rt_printf("section4 count : %d\n", dataControl->trayInfor.section4);
+                                    dataControl->operateMode.section = DataControl::Soup;
+                                    break;
+                                }
+                                case 4: // rice
+                                {
+                                    dataControl->trayInfor.section5 = dataControl->trayInfor.section5_cnt%12;
+                                    rt_printf("section5 count : %d, %d\n", dataControl->trayInfor.section5_cnt, dataControl->trayInfor.section5);
+                                    dataControl->operateMode.section = DataControl::Rice;
+                                    break;
+                                }
+                            }
+                            dataControl->select_indx = dataControl->section_indx;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void TcpServer::recvDataOffset()
+{
+    if(bufRecv[1] == CMD_OFFSET){
+        switch(bufRecv[2]){
+            case 0x01:
+            {
+                int indx = 3;
+                char buf[8] = {0,};
+
+                printf("receive section offset data : ");
+                for(int i = 0; i < 15; i++){
+                    memcpy(buf, bufRecv + indx, sizeof(double));
+                    dataControl->sectionOffset[i] = atof(buf);
+                    indx += sizeof(double);
+                    printf("%f, ", dataControl->sectionOffset[i]);
+                }
+                printf("\n");
+                break;
+            }
+            case 0x02:
+            {
+                int indx = 3;
+                printf("receive torque offset data : ");
+                for(int i = 0; i < NUM_JOINT; i++, indx++){
+                    //                    memcpy(buf, bufRecv + indx, sizeof(int));
+                    dataControl->torque_offset[i] = static_cast<int>(bufRecv[indx]);
+                    if(dataControl->torque_offset[i] >= 127){
+                        dataControl->torque_offset[i] -= 256;
+                    }
+                    printf("%d, ", dataControl->torque_offset[i]);
+                }
+                printf("\n");
+                break;
+            }
+            case 0x03:
+            {
+                int indx = 3;
+                printf("receive recognition data : ");
+                for(int i = 0; i < 2; i++, indx++){
+                    dataControl->KITECHData.food_pos[i+4] = static_cast<int>(bufRecv[indx]);
+                    if(dataControl->KITECHData.food_pos[i+4] >= 127){
+                        dataControl->KITECHData.food_pos[i+4] -= 256;
+                    }
+                    printf("%d, ", dataControl->KITECHData.food_pos[i+4]);
+                }
+                printf("\n");
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
 void TcpServer::recvData(){
     if(bufRecv[0] == 'N' && bufRecv[1] == 'D'){
         dataControl->config_check = false;
         dataControl->RobotData.module_init = false;
 
         if(bufRecv[2] == NUM_JOINT && bufRecv[3] == NUM_DOF && bufRecv[4] == dataControl->MODULE_TYPE){
-            rt_printf("Client & Server configuration check complete\n");
+            printf("Client & Server configuration check complete\n");
             dataControl->RobotData.joint_op_mode = bufRecv[5];
             dataControl->config_check = true;
             dataControl->tablet_mode = false;
+
+            printf("joint op mode : %d\n", dataControl->RobotData.joint_op_mode);
         }
         else{
             if(bufRecv[2] != NUM_JOINT){
-                rt_printf("Client & Server does not matched number of joints\n");
+                printf("Client & Server does not matched number of joints\n");
             }
             if(bufRecv[3] != NUM_DOF){
-                rt_printf("Client & Server does not matched degree of freedom\n");
+                printf("Client & Server does not matched degree of freedom\n");
             }
             if(bufRecv[4] != dataControl->MODULE_TYPE){
-                rt_printf("Client & Server does not matched module type\n");
+                printf("Client & Server does not matched module type\n");
             }
         }
 
@@ -757,7 +1493,7 @@ void TcpServer::recvData(){
             }
 
             rt_printf("%f %f %f %f %f %f %f\n",
-                   dataControl->ClientToServer.desiredJoint[0],
+                      dataControl->ClientToServer.desiredJoint[0],
                     dataControl->ClientToServer.desiredJoint[1],
                     dataControl->ClientToServer.desiredJoint[2],
                     dataControl->ClientToServer.desiredJoint[3],
@@ -864,10 +1600,10 @@ void TcpServer::recvData(){
                 rt_printf("received path data : \n");
                 for(unsigned int i = 0; i < dataControl->PathData.row; i++){
                     rt_printf("%f %f %f %f %f %f %f %f\n",
-                           dataControl->PathData.total_time[i], dataControl->PathData.point_px[i],
-                           dataControl->PathData.point_py[i], dataControl->PathData.point_pz[i],
-                           dataControl->PathData.point_rx[i], dataControl->PathData.point_ry[i],
-                           dataControl->PathData.point_rz[i], dataControl->PathData.acc_time[i]);
+                              dataControl->PathData.total_time[i], dataControl->PathData.point_px[i],
+                              dataControl->PathData.point_py[i], dataControl->PathData.point_pz[i],
+                              dataControl->PathData.point_rx[i], dataControl->PathData.point_ry[i],
+                              dataControl->PathData.point_rz[i], dataControl->PathData.acc_time[i]);
                 }
 
                 break;
@@ -893,7 +1629,7 @@ void TcpServer::recvData(){
             }
             case DataControl::RunCmd:
             {
-                dataControl->PathData.cycle_count_max = static_cast<char>(bufRecv[indx]);
+                dataControl->PathData.cycle_count_max = static_cast<signed char>(bufRecv[indx]);
                 indx += CYCLE_COUNT_LEN;
                 dataControl->RobotData.run_mode = DataControl::RunCmd;
                 dataControl->PathData.path_data_indx = 0;
@@ -997,14 +1733,14 @@ void TcpServer::recvData(){
                         switch(dataControl->section_indx){
                             case 0: // side 1
                             {
-                                dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%4;
+                                dataControl->trayInfor.section1 = dataControl->trayInfor.section1_cnt%6;
                                 rt_printf("section1 count : %d, %d\n", dataControl->trayInfor.section1_cnt, dataControl->trayInfor.section1);
                                 dataControl->operateMode.section = DataControl::Side1;
                                 break;
                             }
                             case 1: // side 2
                             {
-                                dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%4;
+                                dataControl->trayInfor.section2 = dataControl->trayInfor.section2_cnt%6;
                                 rt_printf("section2 count : %d, %d\n", dataControl->trayInfor.section2_cnt, dataControl->trayInfor.section2);
                                 dataControl->operateMode.section = DataControl::Side2;
                                 break;
@@ -1034,6 +1770,48 @@ void TcpServer::recvData(){
                 }
             }
         }
+    }
+    else if(bufRecv[0] == 'N' && bufRecv[1] == 'T'){
+        uint16_t indx = SOCKET_TOKEN_SIZE;
+
+        char buf[8];
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->torque_const1 = atof(buf);
+        indx += 8;
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->torque_const2 = atof(buf);
+        indx += 8;
+
+        rt_printf("receive torque const : %f, %f\n", dataControl->torque_const1, dataControl->torque_const2);
+    }
+    else if(bufRecv[0] == 'N' && bufRecv[1] == 'V'){
+        uint16_t indx = SOCKET_TOKEN_SIZE;
+
+        char buf[8];
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->RobotData.Kp = atof(buf);
+        indx += 8;
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->RobotData.Dp = atof(buf);
+        indx += 8;
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->RobotData.Kr = atof(buf);
+        indx += 8;
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->RobotData.Dr = atof(buf);
+        indx += 8;
+
+        rt_printf("receive spring/damper const : %f, %f, %f, %f\n",
+                  dataControl->RobotData.Kp, dataControl->RobotData.Dp, dataControl->RobotData.Kr, dataControl->RobotData.Dr);
+    }    else if(bufRecv[0] == 'N' && bufRecv[1] == 'F'){
+        uint16_t indx = SOCKET_TOKEN_SIZE;
+
+        char buf[8];
+        memcpy(buf, bufRecv + indx, 8);
+        dataControl->RobotData.desiredForce = atof(buf);
+        indx += 8;
+
+        rt_printf("receive desired force : %f\n", dataControl->RobotData.desiredForce);
     }
 }
 
@@ -1136,6 +1914,198 @@ void TcpServer::sendData(){
     }
 }
 
+void TcpServer::recvDataPath()
+{
+    if(bufRecv[0] == SOP_PATH_RX){
+        switch(bufRecv[1]){
+            case Init:
+            {
+                rt_printf("Client & Server configuration check complete\n");
+                dataControl->config_check = true;
+                dataControl->tablet_mode = true;
+
+                break;
+            }
+            case Start:
+            {
+                dataControl->key_value = KEY_Z;
+
+                break;
+            }
+            case Apply_size:
+            {
+                uint16_t indx = 2;
+
+                dataControl->PathData.row = static_cast<char>(bufRecv[indx]);
+                indx += ROW_SIZE_LEN;
+                dataControl->PathData.col = static_cast<char>(bufRecv[indx]);
+                indx += COL_SIZE_LEN;
+
+                dataControl->PathData.comm_data.clear();
+
+                rt_printf("received path data size : %d, %d\n", dataControl->PathData.row, dataControl->PathData.col);
+
+                dataControl->PathData.row++;
+                break;
+            }
+            case Apply_path:
+            {
+                uint16_t indx = 2;
+
+                uint16_t row = static_cast<char>(bufRecv[indx]);
+                indx += ROW_SIZE_LEN;
+
+                char buf[8];
+                double bufData = 0;
+                for(int i = 0; i < row; i++){
+                    memcpy(buf, bufRecv + indx, MOVE_TIME_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += MOVE_TIME_LEN;
+
+                    memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += PATH_DATA_LEN;
+
+                    memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += PATH_DATA_LEN;
+
+                    memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += PATH_DATA_LEN;
+
+                    memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += PATH_DATA_LEN;
+
+                    memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                    bufData = atof(buf);
+                    dataControl->PathData.comm_data.push_back(bufData);
+                    indx += PATH_DATA_LEN;
+                }
+
+                rt_printf("received path data size : %d\n", row);
+                if(row == 8){
+                    rt_printf("received path data : \n");
+                    for(unsigned int i = 0; i < dataControl->PathData.row-1; i++){
+                        rt_printf("%d %f %f %f %f %f %f\n", i,
+                                  dataControl->PathData.comm_data[i*dataControl->PathData.col + 0],
+                                dataControl->PathData.comm_data[i*dataControl->PathData.col + 1],
+                                dataControl->PathData.comm_data[i*dataControl->PathData.col + 2],
+                                dataControl->PathData.comm_data[i*dataControl->PathData.col + 3],
+                                dataControl->PathData.comm_data[i*dataControl->PathData.col + 4],
+                                dataControl->PathData.comm_data[i*dataControl->PathData.col + 5]);
+                    }
+                }
+                break;
+            }
+            case Run:
+            {
+                if(dataControl->PathData.comm_data.size() > 0){
+                    dataControl->key_value = KEY_C;
+                }
+                break;
+            }
+            case Stop:
+            {
+                dataControl->PathData.path_data_indx = 0;
+                dataControl->PathData.path_struct_indx = 0;
+                dataControl->ClientToServer.opMode = DataControl::Wait;
+                break;
+            }
+            case Offset:
+            {
+                uint16_t indx = 2;
+                char buf[8];
+                double bufData = 0;
+
+                memcpy(buf, bufRecv + indx, MOVE_TIME_LEN);
+                bufData = atof(buf);
+                //                dataControl->PathData.comm_data.push_back(bufData);
+                dataControl->PathData.offset[0] = bufData;
+                indx += MOVE_TIME_LEN;
+
+                memcpy(buf, bufRecv + indx, PATH_DATA_LEN);
+                bufData = atof(buf);
+                //                dataControl->PathData.comm_data.push_back(bufData);
+                dataControl->PathData.offset[1] = bufData;
+                indx += PATH_DATA_LEN;
+
+                rt_printf("received offset data : %f, %f\n", dataControl->PathData.offset[0], dataControl->PathData.offset[1]);
+
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+}
+
+void TcpServer::sendDataPath()
+{
+    //    rt_printf("%d\n", dataControl->ServerToClient.size());
+    if(dataControl->ServerToClient.size() > 0){
+        unsigned int size = dataControl->ServerToClient.size();
+        for(unsigned int i = 0; i < size; i++){
+            uint16_t indx = 0;
+            memset(bufSend, 0, SENDBUFSIZE);
+
+            bufSend[0] = SOP_PATH_TX;
+            indx += 1;
+
+            bufSend[indx] = dataControl->ServerToClient.front().indx;
+            indx += DATA_INDEX_LEN;
+
+            for(int i = 0; i < NUM_JOINT; i++){
+                memcpy(bufSend + indx, QString::number((dataControl->ServerToClient.front().cur_position[i])*ENC2DEG).toStdString().c_str(), MOTION_DATA_LEN);
+                indx += MOTION_DATA_LEN;
+            }
+
+            for(int i = 0; i < NUM_JOINT; i++){
+                memcpy(bufSend + indx, QString::number((dataControl->ServerToClient.front().tar_position[i])*ENC2DEG).toStdString().c_str(), MOTION_DATA_LEN);
+                indx += MOTION_DATA_LEN;
+            }
+
+            for(int i = 0; i < 3; i++){
+                memcpy(bufSend + indx, QString::number(dataControl->ServerToClient.front().presentCartesianPose[i]).toStdString().c_str(), MOTION_DATA_LEN);
+                indx += MOTION_DATA_LEN;
+            }
+
+            bufSend[indx] = dataControl->ServerToClient.front().opMode;
+            indx++;
+
+            bufSend[indx] = EOP_PATH;
+            indx += 1;
+
+            sendByteLen = send(clientSockFD, bufSend, static_cast<size_t>(indx), 0);
+
+            dataControl->ServerToClient.erase(dataControl->ServerToClient.begin());
+            dataControl->ServerToClient.clear();
+        }
+
+        //        rt_printf("sendByteLen : %d\n", sendByteLen);
+        //        rt_printf("Send data : ");
+        //        for(int i = 0; i < sendByteLen; i++){
+        //            rt_printf("%d ", bufSend[i]);
+        //        }
+        //        rt_printf("\n");
+
+        if(sendByteLen < 0){
+            rt_printf("Send Error\n");
+            comm_manager_run = false;
+            connected = false;
+            dataControl->config_check = false;
+        }
+    }
+}
+
 void TcpServer::initSocket()
 {
     listenSockFD = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -1176,7 +2146,6 @@ void TcpServer::connectSocket()
     if(listen(listenSockFD, MAXCONNECTIONS) < 0){
         cout << endl << "listen error" << endl;
     }
-
     int clientAddrSize = sizeof(client_addr);
 
     curLen = 0;
@@ -1188,9 +2157,9 @@ void TcpServer::connectSocket()
         cout << endl << "accept error" << endl;
     }
 
-    cout << "client accepted" << endl;
-    cout << "address : " << inet_ntoa(client_addr.sin_addr) << endl;
-    cout << "port : " << ntohs(client_addr.sin_port) << endl;
+    cout << "(" << port << ") " << "client accepted" << endl;
+    cout << "(" << port << ") " << "address : " << inet_ntoa(client_addr.sin_addr) << endl;
+    cout << "(" << port << ") " << "port : " << ntohs(client_addr.sin_port) << endl;
 
     connected = true;
 }

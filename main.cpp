@@ -32,10 +32,11 @@ int main()
 
     controlMain = new ControlMain();
     controlMain->start();
-    usleep(1000000);
 
     pause();
 
     return 0;
 }
+
+
 

@@ -12,7 +12,7 @@
 
 using namespace std;
 
-enum Module{FAR_V1=1, FAR_V2, FAR_V3, FAR_V4};
+enum Module{FAR_V1=1, FAR_V2, FAR_V3, FAR_V4, FAR_V5};
 
 class Body
 {

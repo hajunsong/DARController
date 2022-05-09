@@ -20,18 +20,19 @@ Numerical::~Numerical()
     }
 }
 
-void Numerical::ludcmp(double *A, int n, int* indx, double d, double *fac)
+int Numerical::ludcmp(double *A, int n, int* indx, double d, double *fac)
 {
 
     vv = new double[n];
     a = new double[n*n];
-    memcpy(a, A, sizeof(double) * 6 * 6);
+    memcpy(a, A, sizeof(double) * n * n);
     for (i = 0; i < n; i++) {
         big = 0.0;
         for (j = 0; j < n; j++)
             if ((temp = fabs(a[i*n + j])) > big) big = temp;
         if (big == 0.0) {
-//            printf("Singular matrix in LUdcmp");
+            printf("Singular matrix in LUdcmp");
+            return -1;
         }
         vv[i] = 1.0 / big;
     }
@@ -70,6 +71,8 @@ void Numerical::ludcmp(double *A, int n, int* indx, double d, double *fac)
 
     delete[] vv;
     delete[] a;
+
+    return 1;
 }
 
 void Numerical::lubksb(double *a, int n, int* indx, double *b, double *x)

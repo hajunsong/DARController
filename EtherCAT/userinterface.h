@@ -18,12 +18,15 @@ public:
     void ecat_start();
     void servo_on();
     void servo_off();
-    void servo_run(long tar_position[], int8_t dir[], int32_t joint_offset[]);
+    void servo_run(long tar_position[], int8_t dir[], int32_t joint_offset[], long tar_position_rev[] = NULL);
+    void servo_run(int tar_torque[], int8_t dir[]);
     void servo_stop();
     void set_led(unsigned char mode);
 
     void start();
     void stop();
+
+    void servo_mode(int joint_op_mode);
 
     ecatmaster v_global_ethercat_control;
 

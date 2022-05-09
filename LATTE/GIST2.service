@@ -1,0 +1,9 @@
+[Unit]
+Description=GIST module 2
+
+[Service]
+ExecStart=/root/gist_module/send_data.py
+WorkingDirectory=/root/gist_module
+
+[Install]
+WantedBy=multi-user.target

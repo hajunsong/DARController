@@ -683,20 +683,28 @@ void ecatmaster::f_oper_set_servo_state(int v_local_slv_inx)
 
             /* ADDED */
             // CSP mode
-            EC_WRITE_S8(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(MODE_OF_OP) , 0x08);
-            // target position = current position
-            v_des_pos[v_local_slv_inx] = EC_READ_S32(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(POSITION_VALUE));
-            v_des_tor[v_local_slv_inx] = 0.;
+//            EC_WRITE_S8(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(MODE_OF_OP) , 0x08);
+//            // target position = current position
+//            v_des_pos[v_local_slv_inx] = EC_READ_S32(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(POSITION_VALUE));
+//            v_des_tor[v_local_slv_inx] = 0.;
             /**/
 
 
             break;
         case step_servo_on:	// servo on
             v_area_val = 0x0f;		//enable operation
-            v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val = v_global_ecat_slave[v_local_slv_inx].v_global_cur_position;											//Read current position
-            d_print("[v_local_slv_inx:%d] = target_val:%ld\r\n", v_local_slv_inx, v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);	//Print current position
+            if(v_global_ecat_slave[v_local_slv_inx].v_global_cur_modes_of_operation == 8){
+                v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val = v_global_ecat_slave[v_local_slv_inx].v_global_cur_position;											//Read current position
+                d_print("[v_local_slv_inx:%d] = target_val:%ld\r\n", v_local_slv_inx, v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);	//Print current position
 
-            EC_WRITE_U32(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(TARGET_POSITION), v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);		//Set the current position
+                EC_WRITE_U32(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(TARGET_POSITION), v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);		//Set the current position
+            }
+            else if(v_global_ecat_slave[v_local_slv_inx].v_global_cur_modes_of_operation == 10){
+                v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val = v_global_ecat_slave[v_local_slv_inx].v_global_cur_torque_value1;											//Read current position
+                d_print("[v_local_slv_inx:%d] = target_val:%ld\r\n", v_local_slv_inx, v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);	//Print current position
+
+                EC_WRITE_S16(v_global_domain1_pd + v_global_ecat_slave[v_local_slv_inx].f_oper_get_offset_value(TARGET_TORQUE), v_global_ecat_slave[v_local_slv_inx].v_global_set_target_val);		//Set the current torque
+            }
             break;		// servo on
         case step_target_pos_fw:	//driving forward
         case step_target_pos_rev:	//driving reverse
@@ -1654,10 +1662,10 @@ void f_task_rt_ecat_task(void *v_local_ptr_cookie)
             // send command
             for(int v_sub_count =0; v_sub_count < v_area_ecat_control->f_get_slave_count(); ++v_sub_count)
             {
-                if(run_mode == 0){  // CSP
+                if(v_area_ecat_control->f_get_slave()[v_sub_count].v_global_cur_modes_of_operation == 8){  // CSP
 //                    v_area_ecat_control->f_get_slave()[v_sub_count].f_oper_to_csp();
                     v_area_ecat_control->f_get_slave()[v_sub_count].f_oper_send_pos_cmd(v_area_ecat_control->v_des_pos[v_sub_count]);//f_oper_send_process();
-                }else if(run_mode == 1){    // CST
+                }else if(v_area_ecat_control->f_get_slave()[v_sub_count].v_global_cur_modes_of_operation == 10){    // CST
                     v_area_ecat_control->f_get_slave()[v_sub_count].f_oper_send_tor_cmd(v_area_ecat_control->v_des_tor[v_sub_count]);
                 }
             }

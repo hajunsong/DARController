@@ -4,7 +4,7 @@ CONFIG += c++11 console
 CONFIG -= app_bundle
 
 INCLUDEPATH += /opt/xenomai-2.6.4/include
-LIBS      += -lpthread -L/opt/xenomai-2.6.4/lib -lxenomai -lnative
+LIBS += -lpthread -L/opt/xenomai-2.6.4/lib -lxenomai -lnative
 #DEFINES += __LINUX_ARM_ARCH__
 
 target.path = /mnt/mtd5/daincube/KETI
@@ -14,15 +14,7 @@ myconfig.path = /mnt/mtd5/daincube/KETI
 myconfig.files = $$PWD/config.json
 INSTALLS += myconfig
 
-joints.path = /mnt/mtd5/daincube/KETI/cal_data
-joints.files = $$PWD/cal_data/joint_data.txt
-INSTALLS += joints
-
-carts.path = /mnt/mtd5/daincube/KETI/cal_data
-carts.files = $$PWD/cal_data/cartesian_data.txt
-INSTALLS += carts
-
-TARGET = DARControllerKITECH
+TARGET = DARController
 
 SOURCES += main.cpp \
     ControlMain/controlfunc.cpp \
@@ -51,4 +43,4 @@ HEADERS += \
     EtherCAT/userinterface.h \
     EtherCAT/ecatmaster.h \
     EtherCAT/ecatslave.h \
-    EtherCAT/daininterface.h \
+    EtherCAT/daininterface.h

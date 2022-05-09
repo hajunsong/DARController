@@ -1,0 +1,9 @@
+[Unit]
+Description=Arduino DIO module service
+
+[Service]
+ExecStart=/root/Arduino/Project/KETI_DIO.py
+WorkingDirectory=/root/Arduino/Project
+
+[Install]
+WantedBy=multi-user.target

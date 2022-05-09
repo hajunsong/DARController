@@ -1,10 +1,11 @@
 {
-    "MODULE_TYPE" : 4,
+    "MODULE_TYPE" : 5,
+    "ROBOT_ID" : 1,
     "MODULE_DIR" : [-1, 1, 1, -1, -1, 1, -1],
-    "JOINT_OFFSET" : [-4546, 7714, -4372, 3203, 2210, 2443, -7772],
+    "JOINT_OFFSET" : [-3341, 7052, -7819, 4824, -5954, 4717, -4176],
     "TOOL_OFFSET" : [0.0, 0.0, 0.0],
-    "CAMERA_JOINT" : [55.590820, -12.062988, -18.830566, -34.716796, -56.733398, 0.0, 0.0],
-    "READY_JOINT" : [45, -5, -60, -65, 45, 0, 0],
-    "LOGGING_ENABLE" : true,
+    "CAMERA_JOINT" : [55.590820, -12.062988, -18.830566, -34.716796, 56.733398, 0.0, 0.0],
+    "READY_JOINT" : [45, -5, -60, -65, -45, 0, 0],
+    "LOGGING_ENABLE" : false,
     "CURRENT_STATE_PRINT" : false
 }

@@ -21,6 +21,7 @@
 #define POSITION_VALUE      0x6064
 #define VELOCITY_VALUE      0x606C
 #define TORQUE_VALUE        0x6077
+#define TARGET_CURRENT      0x4207
 
 
 #define	ECAT_STATE_INIT			1

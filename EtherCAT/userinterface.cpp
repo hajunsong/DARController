@@ -78,8 +78,8 @@ void userinterface::init(){
     memcpy(slave_model_name, slave_model_str.c_str(), sizeof(char)*slave_model_str.length());
     memcpy(slave_vendor_name, slave_vendor_str.c_str(), sizeof(char)*slave_vendor_str.length());
 
-    v_global_ethercat_control.f_oper_slave_setting_initialize(0, slave_model_name, slave_vendor_name, 0x0000ffff, 0x00000000, true);
-//    v_global_ethercat_control.f_oper_slave_setting_initialize(0, slave_model_name, slave_vendor_name, 0x00000ba9, 0x00000001, true);
+//    v_global_ethercat_control.f_oper_slave_setting_initialize(0, slave_model_name, slave_vendor_name, 0x0000ffff, 0x00000000, true);
+    v_global_ethercat_control.f_oper_slave_setting_initialize(0, slave_model_name, slave_vendor_name, 0x00000ba9, 0x00000001, true);
     v_global_ethercat_control.f_oper_slave_setting_initialize(1, slave_model_name, slave_vendor_name, 0x00000ba9, 0x00000001, true);
     v_global_ethercat_control.f_oper_slave_setting_initialize(2, slave_model_name, slave_vendor_name, 0x00000ba9, 0x00000001, true);
     v_global_ethercat_control.f_oper_slave_setting_initialize(3, slave_model_name, slave_vendor_name, 0x00000ba9, 0x00000001, true);
@@ -135,7 +135,7 @@ void userinterface::servo_off()
     }
 }
 
-void userinterface::servo_run(long tar_position[], int8_t dir[], int32_t joint_offset[]){
+void userinterface::servo_run(long tar_position[], int8_t dir[], int32_t joint_offset[], long tar_position_prev[]){
 //    d_print("ServoRun .. \n");
 
 //    rt_printf("%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", tar_position[0], tar_position[1], tar_position[2], tar_position[3], tar_position[4], tar_position[5], tar_position[6]);
@@ -143,6 +143,19 @@ void userinterface::servo_run(long tar_position[], int8_t dir[], int32_t joint_o
 //    memcpy(v_global_ethercat_control.v_des_pos, tar_position, sizeof(long)*v_global_ethercat_control.f_get_slave_count());
     for(int i = 0; i < v_global_ethercat_control.f_get_slave_count(); i++){
         v_global_ethercat_control.v_des_pos[i] = dir[i]*(tar_position[i] + dir[i]*joint_offset[i]);
+    }
+
+    for(int slv_inx=0; slv_inx < v_global_ethercat_control.f_get_slave_count(); slv_inx++)
+    {
+       v_global_ethercat_control.f_get_slave()[slv_inx].v_global_req_servo_state = REQ_SERVO_RUN;
+    }
+}
+
+void userinterface::servo_run(int tar_torque[], int8_t dir[]){
+//    rt_printf("%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", tar_torque[0], tar_torque[1], tar_torque[2], tar_torque[3], tar_torque[4], tar_torque[5], tar_torque[6]);
+
+    for(int i = 0; i < v_global_ethercat_control.f_get_slave_count(); i++){
+        v_global_ethercat_control.v_des_tor[i] = dir[i]*tar_torque[i];
     }
 
     for(int slv_inx=0; slv_inx < v_global_ethercat_control.f_get_slave_count(); slv_inx++)
@@ -211,6 +224,28 @@ void userinterface::stop()
 
     usleep(1000000);
     on_v_action_pb_ECAT_start_clicked();
+}
+
+void userinterface::servo_mode(int joint_op_mode)
+{
+    ecatslave *v_area_slaves = v_global_ethercat_control.f_get_slave();
+
+    switch(joint_op_mode){
+        case 0:
+            for(int v_area_slave_count = 0; v_area_slave_count < v_global_ethercat_control.f_get_slave_count(); ++v_area_slave_count)
+            {
+                v_area_slaves[v_area_slave_count].f_oper_to_cst();
+            }
+            break;
+        case 3:
+            for(int v_area_slave_count = 0; v_area_slave_count < v_global_ethercat_control.f_get_slave_count(); ++v_area_slave_count)
+            {
+                v_area_slaves[v_area_slave_count].f_oper_to_csp();
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 

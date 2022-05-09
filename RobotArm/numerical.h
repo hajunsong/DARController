@@ -27,7 +27,7 @@ public:
     Numerical();
     ~Numerical();
     // LU solver
-    void ludcmp(double *a, int n, int* indx, double d, double *fac);
+    int ludcmp(double *a, int n, int* indx, double d, double *fac);
     void lubksb(double *a, int n, int* indx, double *b, double *x);
 
     void inv_mat66(double *M, double *inv_M);

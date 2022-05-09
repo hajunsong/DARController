@@ -1,0 +1,9 @@
+[Unit]
+Description=GIST module 1
+
+[Service]
+ExecStart=/root/gist_module/food_recognition/food_recognition_main.py
+WorkingDirectory=/root/gist_module/food_recognition
+
+[Install]
+WantedBy=multi-user.target

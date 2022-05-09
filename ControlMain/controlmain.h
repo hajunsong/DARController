@@ -36,21 +36,15 @@ public:
     DataControl *dataControl;
 
     void robotServoOn(char enable);
-    void robotInitialize();
     void robotKinematics();
     void robotDynamics();
+    void robotDOB();
     void robotWait();
     void robotJointMove(char mode, double desJoint[NUM_JOINT]);
-    void robotCartesianMove(char mode, double desCartesian[NUM_DOF]);
-    void robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> beta, std::vector<double> d7, std::vector<int> option, double offset);
-    void robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> rx, std::vector<double> ry, std::vector<double> rz);
-    void robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> beta, std::vector<double> d7);
+    void robotPathGenerate(std::vector<double> px, std::vector<double> py, std::vector<double> pz, std::vector<double> q6, std::vector<double> q7);
     void robotRun();
-    void robotReady();
-//    void robotSPGC();
     void robotOperate();
-//    void robotVSD();
-    void robotTest();
+    void robotVSD();
 
     char data_indx;
 
@@ -58,16 +52,15 @@ public:
     TcpServer *tcpServerLatte;
     TcpServer *tcpServerDIO;
     TcpServer *tcpServerTemp;
+    TcpServer *tcpServerPath;
+    TcpServer *tcpServerDiningInfor;
+    TcpServer *tcpServerKey;
+    TcpServer *tcpServerOffset;
 
     static void* init_func(void* arg);
     bool init_thread_run;
 
     userinterface *ecatInterface;
-
-//    int key_value;
-
-//    void setTabletMode();
-//    void unsetTabletMode();
 
 private:
     static void robot_RT(void* arg);
@@ -82,10 +75,10 @@ private:
 
     void goalReachCart(double desired_pose[NUM_DOF], double present_pose[NUM_DOF], bool *goal_reach);
     void goalReachJoint(long[NUM_JOINT], long[NUM_JOINT], bool *goal_reach);
-    void path_generator(double x0, double xf, double tf, double ta, double h, std::vector<double> *path, int path_index=0);
-    void path_generator_circle(double p1, double p2, double pcx, double pcy, std::vector<double> path_x, std::vector<double> *path_y);
-    void func_q6d7_to_q7(double q6, double d7, double* q7);
-    void func_q6q7_to_d7(double q6, double q7, double* d7);
+    void path_generator(double x0, double xf, double tf, double ta, double h, std::vector<double> *path);
+//    void path_generator_circle(double p1, double p2, double pcx, double pcy, std::vector<double> path_x, std::vector<double> *path_y);
+//    void func_q6d7_to_q7(double q6, double d7, double* q7);
+//    void func_q6q7_to_d7(double q6, double q7, double* d7);
 
     uint8_t module_indx;
 
@@ -101,6 +94,16 @@ private:
     FILE *fp_logging;
 
     DiningWaypoints diningWaypoints;
+
+    int print_cnt;
+    bool servo;
+
+    double goal_torque[7];
+    bool jog_command;
+
+    int time_check_delay_cnt, time_check_delay_max;
+
+    int cycle_count;
 };
 
 #endif // CONTROLMAIN_H

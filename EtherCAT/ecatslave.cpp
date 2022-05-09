@@ -195,7 +195,6 @@ void ecatslave::f_oper_to_cst(){
     uint8_t *v_area_domain1_pd = *((ecatmaster *)v_global_ecat_master_ptr)->f_get_domain1_pd_ptr();
 
     EC_WRITE_S8(v_area_domain1_pd + f_oper_get_offset_value(MODE_OF_OP), 10);
-
 }
 
 /* ADDED */
